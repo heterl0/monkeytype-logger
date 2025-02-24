@@ -39,6 +39,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
   } else if (message.action === "downloadRecords") {
     saveRecordsToFile(records, fileCounter);
+  } else if (message.action === "deleteLastRecord") {
+    if (records.length > 0) {
+      records.pop();
+      chrome.storage.local.set({ records });
+    }
   }
 });
 

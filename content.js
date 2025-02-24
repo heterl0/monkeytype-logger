@@ -46,6 +46,10 @@ function processTestResult() {
       // Skip words that are completely correct if you want to log only errors/corrections
       return;
     }
+    if ((reason === "error" || reason === "corrected") && word.length >= 20) {
+      // Skip overly long words
+      return;
+    }
     wordsData.push({ word, reason });
   });
 
