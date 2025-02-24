@@ -26,12 +26,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       // Save to chrome.storage.local
       chrome.storage.local.set({ records: records });
 
-      // Trigger a toast message to the user that the record has been stored
-      chrome.runtime.sendMessage({
-        action: "showToast",
-        message: "Record stored successfully!",
-      });
-
       // Check if the record count exceeds the limit
       if (records.length >= 10000) {
         saveRecordsToFile(records, fileCounter);
