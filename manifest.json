@@ -1,0 +1,23 @@
+{
+  "manifest_version": 3,
+  "name": "Monkeytype History Logger",
+  "version": "1.0",
+  "description": "Logs error and corrected words from Monkeytype tests into a JSON file.",
+  "permissions": ["storage", "downloads", "unlimitedStorage"],
+  "content_scripts": [
+    {
+      "matches": ["https://monkeytype.com/*"],
+      "js": ["content.js"]
+    }
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "icons": {
+    "48": "icon48.png",
+    "128": "icon128.png"
+  }
+}
