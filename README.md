@@ -12,6 +12,11 @@ This extension logs errors and corrected words from your Monkeytype tests to tra
 - Logs error or corrected words
 - Allows downloading logs as JSON
 
+## Monkeytype Settings
+
+Make sure "always show words history" is enabled in your Monkeytype account settings
+to better track typed words in your logs.
+
 ## Analysis Setup
 
 1. Install Python requirements:
