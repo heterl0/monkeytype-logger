@@ -7,7 +7,6 @@ from wordcloud import WordCloud
 from datetime import datetime
 import json
 from matplotlib.colors import LinearSegmentedColormap
-import json
 
 
 # Set styling for better visualization
