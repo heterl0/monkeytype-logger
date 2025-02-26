@@ -120,6 +120,15 @@
 
         .container-records {
             width: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container-records-status {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            width: 100%;
         }
 
         .error-description {
@@ -142,9 +151,14 @@
 
 
         <div class="container-records">
-            <p class="error-description" style="font-size: 0.8em; color: #f44336; text-align: left;">
-                Words in red are recognized as errors
-            </p>
+            <div class="container-records-status">
+                <p class="error-description" style="font-size: 0.8em; color: #f44336; text-align: left;">
+                    Words in red are recognized as errors
+                </p>
+                <p class="error-description" style="font-size: 0.8em; color: #f44336; text-align: left;"
+                    id="errorCapacity">
+                </p>
+            </div>
             <pre id="lastRecordContainer" style="font-size: 0.9em; width: 100%;"></pre>
         </div>
         <button id="deleteLastRecordButton" class="download-button">Delete Last Record</button>

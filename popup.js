@@ -6,6 +6,8 @@ document.addEventListener("DOMContentLoaded", () => {
   chrome.storage.local.get(["records"], (result) => {
     const records = result.records || [];
     if (records.length > 0) {
+      document.getElementById("errorCapacity").textContent =
+        records.length + " records";
       document.getElementById("lastRecordContainer").textContent = records[
         records.length - 1
       ].words
@@ -29,6 +31,8 @@ document
               .map((w) => w.word)
               .join(", ");
         }
+        document.getElementById("errorCapacity").textContent =
+          records.length + " records";
       });
     });
   });
