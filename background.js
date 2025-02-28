@@ -38,6 +38,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         records.pop();
         chrome.storage.local.set({ records });
       }
+    } else if (message.action === "resetAllRecords") {
+      records = [];
+      chrome.storage.local.set({ records });
     }
   });
 });

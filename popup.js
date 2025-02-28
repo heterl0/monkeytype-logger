@@ -73,3 +73,11 @@ fileInput.addEventListener("change", () => {
     reader.readAsText(fileInput.files[0]);
   }
 });
+
+document.getElementById("resetButton").addEventListener("click", () => {
+  if (confirm("Are you sure you want to clear all records?")) {
+    chrome.runtime.sendMessage({ action: "resetAllRecords" });
+    document.getElementById("lastRecordContainer").textContent = "";
+    document.getElementById("errorCapacity").textContent = "0 records";
+  }
+});

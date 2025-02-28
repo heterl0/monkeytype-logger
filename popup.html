@@ -17,7 +17,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 20px;
+            gap: 24px;
         }
 
         .header {
@@ -134,6 +134,14 @@
         .error-description {
             margin-top: 0px;
         }
+
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            width: 100%;
+            position: relative;
+        }
     </style>
 </head>
 
@@ -147,11 +155,8 @@
             <div style="position: relative;">
                 <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%237DA1E8'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z'/%3E%3C/svg%3E"
                     alt="Logo" class="logo">
-                <button id="importButton"
-                    style="border: none; background: transparent; cursor: pointer; position: absolute; top: -24px; right: -24px;">
-                    <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20fill%3D'%237DA1E8'%20viewBox%3D'0%200%2024%2024'%3E%3Cpath%20d%3D'M9%2011l3%203%203-3m-3-9v12m-9%208s.5-2%209-2%209%202%209%202'%2F%3E%3C%2Fsvg%3E"
-                        alt="Import" title="Import" style="width:24px;height:24px;">
-                </button>
+
+
             </div>
         </div>
 
@@ -167,10 +172,23 @@
             </div>
             <pre id="lastRecordContainer" style="font-size: 0.9em; width: 100%;"></pre>
         </div>
-        <button id="deleteLastRecordButton" class="download-button">Delete Last Record</button>
-        <button id="downloadButton" class="download-button">
-            Download Records
-        </button>
+        <div class="action-buttons">
+            <button id="resetButton"
+                style="border: none; background: transparent; cursor: pointer; position: absolute; top: -30px; right: 0px">
+                <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20fill%3D'%237DA1E8'%20viewBox%3D'0%200%2024%2024'%3E%3Cpath%20d%3D'M4%206h16v2H4zm1%203h14v12H5zm5%202v6h4v-6h-4z'%2F%3E%3C%2Fsvg%3E"
+                    alt="Reset" title="Reset" style="width:24px;height:24px;">
+            </button>
+
+            <button id="importButton"
+                style="border: none; background: transparent; cursor: pointer; position: absolute; top: -32px; right: 24px;">
+                <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20fill%3D'%237DA1E8'%20viewBox%3D'0%200%2024%2024'%3E%3Cpath%20d%3D'M9%2011l3%203%203-3m-3-9v12m-9%208s.5-2%209-2%209%202%209%202'%2F%3E%3C%2Fsvg%3E"
+                    alt="Import" title="Import" style="width:24px;height:24px;">
+            </button>
+            <button id="deleteLastRecordButton" class="download-button">Delete Last Record</button>
+            <button id="downloadButton" class="download-button">
+                Download Records
+            </button>
+        </div>
 
     </div>
 
