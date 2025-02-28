@@ -32,7 +32,7 @@ document
               .join(", ");
         }
         document.getElementById("errorCapacity").textContent =
-          records.length + " records";
+          updatedRecords.length + " records";
       });
     });
   });
