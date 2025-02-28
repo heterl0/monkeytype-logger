@@ -102,6 +102,28 @@
             transform: translateY(0);
         }
 
+        .delete-button {
+            background: #e74c3c;
+            color: #ffffff;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 100%;
+            font-size: 1em;
+        }
+
+        .delete-button:hover {
+            background: #c0392b;
+            transform: translateY(-1px);
+        }
+
+        .delete-button:active {
+            transform: translateY(0);
+        }
+
         .footer {
             font-size: 0.8em;
             color: #666;
@@ -212,10 +234,10 @@
                 <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20fill%3D'%237DA1E8'%20viewBox%3D'0%200%2024%2024'%3E%3Cpath%20d%3D'M9%2011l3%203%203-3m-3-9v12m-9%208s.5-2%209-2%209%202%209%202'%2F%3E%3C%2Fsvg%3E"
                     alt="Import" title="Import" class="icon">
             </button>
-            <button id="deleteLastRecordButton" class="download-button">Delete Last Record</button>
             <button id="downloadButton" class="download-button">
                 Download Records
             </button>
+            <button id="deleteLastRecordButton" class="delete-button">Delete Last Record</button>
         </div>
     </div>
 
