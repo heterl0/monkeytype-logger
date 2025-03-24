@@ -15,6 +15,9 @@ document.addEventListener("DOMContentLoaded", () => {
         .join(", ");
     }
   });
+  chrome.storage.local.get(["activeSwitch"], (res) => {
+    document.getElementById("switch").checked = res.activeSwitch ?? true;
+  });
 });
 
 document
@@ -80,4 +83,8 @@ document.getElementById("resetButton").addEventListener("click", () => {
     document.getElementById("lastRecordContainer").textContent = "";
     document.getElementById("errorCapacity").textContent = "0 records";
   }
+});
+
+document.getElementById("switch").addEventListener("change", (e) => {
+  chrome.storage.local.set({ activeSwitch: e.target.checked });
 });

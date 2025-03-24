@@ -1,6 +1,19 @@
 // background.js
 
+let activeSwitchState = true;
+
+chrome.storage.local.get(["activeSwitch"], (res) => {
+  activeSwitchState = res.activeSwitch ?? true;
+});
+
+chrome.storage.onChanged.addListener((changes, areaName) => {
+  if (areaName === "local" && changes.activeSwitch) {
+    activeSwitchState = changes.activeSwitch.newValue ?? true;
+  }
+});
+
 function isDuplicate(newRecord, recordArray) {
+  if (recordArray.length === 0) return false;
   lastRecord = recordArray[recordArray.length - 1];
   if (newRecord.words.length !== lastRecord.words.length) return false;
 
@@ -13,11 +26,15 @@ function isDuplicate(newRecord, recordArray) {
   );
 }
 
+function isActivated() {
+  return activeSwitchState;
+}
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   chrome.storage.local.get(["records"], (result) => {
     records = result.records || [];
     if (message.action === "saveRecord" && message.record) {
-      if (!isDuplicate(message.record, records)) {
+      if (!isDuplicate(message.record, records) && isActivated()) {
         records.push(message.record);
         // Save to chrome.storage.local
         chrome.storage.local.set({ records: records });
