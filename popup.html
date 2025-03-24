@@ -207,6 +207,14 @@
             font-size: 0.9em;
             width: 100%;
         }
+
+        .group-button {
+            display: grid;
+            gap: 16px;
+            width: 100%;
+            grid-template-columns: 1fr 1fr;
+
+        }
     </style>
 </head>
 
@@ -248,11 +256,18 @@
                 <input type="checkbox" id="switch">
                 <label for="switch">Activate</label>
             </div>
+            <div class="group-button">
+                <button id="downloadButton" class="download-button">
+                    Download Records
+                </button>
+                <button id="deleteLastRecordButton" class="delete-button">Delete Last Record</button>
+            </div>
+            <a href="https://monkeytype-analysis.heterl0.live/" target="_blank" id="link-analysis-web">
+                <button class="download-button">
+                    View Analysis
+                </button>
+            </a>
 
-            <button id="downloadButton" class="download-button">
-                Download Records
-            </button>
-            <button id="deleteLastRecordButton" class="delete-button">Delete Last Record</button>
         </div>
     </div>
 
