@@ -1,6 +1,14 @@
-# Monkeytype Logger
+# Monkeytype Logger Extension
+
+![Frame 2](https://github.com/user-attachments/assets/c2d8ad26-bc21-40e0-901b-262c96b1e4d7)
+
 
 This extension logs errors and corrected words from your Monkeytype tests to track progress over time.
+
+## Publish Extension
+
+The extension is published on Microsoft Edge Add-ons:
+[Monkeytype History Logger](https://microsoftedge.microsoft.com/addons/detail/monkeytype-history-logger/ophgnpohledibffckhpabdcciniinnjo).
 
 ## Installation
 
