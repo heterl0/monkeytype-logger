@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MonkeyType Logger Test Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #2c2c2c;
+            color: white;
+        }
+        .test-container {
+            background: #363636;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .words {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        .word {
+            padding: 5px 10px;
+            border-radius: 4px;
+            background: #555;
+        }
+        .word.error {
+            background: #e74c3c;
+        }
+        .word.corrected {
+            background: #f39c12;
+        }
+        .letter {
+            display: inline-block;
+            margin: 0 1px;
+        }
+        .letter.incorrect {
+            color: #e74c3c;
+            text-decoration: underline;
+        }
+        .letter.corrected {
+            color: #f39c12;
+        }
+        button {
+            background: #7DA1E8;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #4281FF;
+        }
+    </style>
+</head>
+<body>
+    <h1>MonkeyType Logger Test Page</h1>
+    
+    <div class="test-container">
+        <h3>Test Results</h3>
+        <div id="resultWordsHistory">
+            <div class="words">
+                <div class="word error" burst="45.2" data-wpm="45.2">
+                    <span class="letter">w</span>
+                    <span class="letter incorrect">r</span>
+                    <span class="letter">o</span>
+                    <span class="letter">n</span>
+                    <span class="letter">g</span>
+                </div>
+                <div class="word corrected" burst="52.8" data-wpm="52.8">
+                    <span class="letter">c</span>
+                    <span class="letter">o</span>
+                    <span class="letter corrected">r</span>
+                    <span class="letter">r</span>
+                    <span class="letter">e</span>
+                    <span class="letter">c</span>
+                    <span class="letter">t</span>
+                </div>
+                <div class="word" burst="48.5" data-wpm="48.5">
+                    <span class="letter">p</span>
+                    <span class="letter">e</span>
+                    <span class="letter">r</span>
+                    <span class="letter">f</span>
+                    <span class="letter">e</span>
+                    <span class="letter">c</span>
+                    <span class="letter">t</span>
+                </div>
+                <div class="word error" burst="41.3" data-wpm="41.3">
+                    <span class="letter">m</span>
+                    <span class="letter incorrect">i</span>
+                    <span class="letter">s</span>
+                    <span class="letter">t</span>
+                    <span class="letter">a</span>
+                    <span class="letter">k</span>
+                    <span class="letter">e</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- WPM Summary Section -->
+        <div class="stats" style="margin-top: 20px;">
+            <div class="stat-item">
+                <span class="stat-label">WPM:</span>
+                <span class="stat-value wpm">47.2</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Accuracy:</span>
+                <span class="stat-value">95.2%</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="test-container">
+        <h3>Test Controls</h3>
+        <button onclick="addTestWord()">Add Test Word</button>
+        <button onclick="clearTestWords()">Clear Test Words</button>
+        <button onclick="triggerMutation()">Trigger DOM Mutation</button>
+    </div>
+    
+    <div class="test-container">
+        <h3>Instructions</h3>
+        <ol>
+            <li>Load this page in Chrome with the extension installed</li>
+            <li>Open the extension popup and click "Debug: Trigger Processing"</li>
+            <li>Check the browser console for debug messages</li>
+            <li>Use the test controls to simulate different scenarios</li>
+        </ol>
+    </div>
+
+    <script>
+        function addTestWord() {
+            const wordsContainer = document.querySelector('.words');
+            const newWord = document.createElement('div');
+            newWord.className = 'word error';
+            newWord.innerHTML = '<span class="letter">t</span><span class="letter incorrect">e</span><span class="letter">s</span><span class="letter">t</span>';
+            wordsContainer.appendChild(newWord);
+        }
+        
+        function clearTestWords() {
+            const wordsContainer = document.querySelector('.words');
+            wordsContainer.innerHTML = '';
+        }
+        
+        function triggerMutation() {
+            const wordsContainer = document.querySelector('.words');
+            const temp = document.createElement('div');
+            temp.style.display = 'none';
+            wordsContainer.appendChild(temp);
+            setTimeout(() => wordsContainer.removeChild(temp), 100);
+        }
+        
+        // Simulate the extension's content script
+        console.log('Test page loaded. The extension should detect this page structure.');
+    </script>
+</body>
+</html> 

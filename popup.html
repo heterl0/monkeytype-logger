@@ -136,7 +136,7 @@
             word-wrap: break-word;
             overflow-y: auto;
             padding: 10px;
-            color: red;
+            color: #ffffff;
             background: #363636;
             border-radius: 8px;
             width: 100%;
@@ -160,7 +160,7 @@
         .error-description {
             margin-top: 0px;
             font-size: 0.8em;
-            color: #f44336;
+            color: #ffffff;
             text-align: left;
         }
 
@@ -234,11 +234,13 @@
         <div class="container-records">
             <div class="container-records-status">
                 <p class="error-description">
-                    Words in red are recognized as errors
+                    Words below are recognized as errors
                 </p>
                 <p class="error-description" id="errorCapacity">
                 </p>
             </div>
+            <p class="error-description" id="overallWPM" style="margin-top: 8px; color: #7DA1E8; font-weight: 500;">
+            </p>
             <pre id="lastRecordContainer" class="record-container"></pre>
         </div>
         <div class="action-buttons">
@@ -262,6 +264,9 @@
                 </button>
                 <button id="deleteLastRecordButton" class="delete-button">Delete Last Record</button>
             </div>
+            <button id="debugButton" class="download-button" style="margin-top: 8px;">
+                Debug: Trigger Processing
+            </button>
             <a href="https://monkeytype-analysis.heterl0.live/" target="_blank" id="link-analysis-web">
                 <button class="download-button">
                     View Analysis
