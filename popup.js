@@ -1,3 +1,51 @@
+// Utility functions to eliminate duplicate code
+function formatWordDisplay(wordData) {
+  return wordData
+    .map((el) => {
+      const wpmText = el.wpm ? ` (${el.wpm} WPM)` : "";
+      const reasonText =
+        el.reason === "error"
+          ? "[ERROR]"
+          : el.reason === "corrected"
+          ? "[CORRECTED]"
+          : "[CORRECT]";
+      return `${reasonText} ${el.word}${wpmText}`;
+    })
+    .join(", ");
+}
+
+function updateOverallWPM(overallWPM) {
+  if (overallWPM) {
+    const wpmDisplay = document.getElementById("overallWPM");
+    if (wpmDisplay) {
+      wpmDisplay.textContent = `Overall WPM: ${overallWPM}`;
+    }
+  }
+}
+
+function clearDisplay() {
+  document.getElementById("lastRecordContainer").textContent = "";
+  const wpmDisplay = document.getElementById("overallWPM");
+  if (wpmDisplay) {
+    wpmDisplay.textContent = "";
+  }
+}
+
+function updateRecordCount(count) {
+  document.getElementById("errorCapacity").textContent = count + " records";
+}
+
+function updateDisplayWithRecord(record) {
+  if (record && record.words) {
+    const wordsDisplay = formatWordDisplay(record.words);
+    document.getElementById("lastRecordContainer").textContent = wordsDisplay;
+    updateOverallWPM(record.overallWPM);
+  } else {
+    clearDisplay();
+  }
+}
+
+// Event listeners
 document.getElementById("downloadButton").addEventListener("click", () => {
   chrome.runtime.sendMessage({ action: "downloadRecords" });
 });
@@ -30,32 +78,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const records = result.records || [];
     if (records.length > 0) {
       const lastRecord = records[records.length - 1];
-      document.getElementById("errorCapacity").textContent =
-        records.length + " records";
-
-      // Display words with their WPM information
-      const wordsDisplay = lastRecord.words
-        .map((el) => {
-          const wpmText = el.wpm ? ` (${el.wpm} WPM)` : "";
-          const reasonText =
-            el.reason === "error"
-              ? "[ERROR]"
-              : el.reason === "corrected"
-              ? "[CORRECTED]"
-              : "[CORRECT]";
-          return `${reasonText} ${el.word}${wpmText}`;
-        })
-        .join(", ");
-
-      document.getElementById("lastRecordContainer").textContent = wordsDisplay;
-
-      // Display overall WPM if available
-      if (lastRecord.overallWPM) {
-        const wpmDisplay = document.getElementById("overallWPM");
-        if (wpmDisplay) {
-          wpmDisplay.textContent = `Overall WPM: ${lastRecord.overallWPM}`;
-        }
-      }
+      updateRecordCount(records.length);
+      updateDisplayWithRecord(lastRecord);
     }
   });
   chrome.storage.local.get(["activeSwitch"], (res) => {
@@ -70,38 +94,12 @@ document
       chrome.storage.local.get(["records"], (res) => {
         const updatedRecords = res.records || [];
         if (updatedRecords.length === 0) {
-          document.getElementById("lastRecordContainer").textContent = "";
-          const wpmDisplay = document.getElementById("overallWPM");
-          if (wpmDisplay) {
-            wpmDisplay.textContent = "";
-          }
+          clearDisplay();
         } else {
           const lastRecord = updatedRecords[updatedRecords.length - 1];
-          const wordsDisplay = lastRecord.words
-            .map((el) => {
-              const wpmText = el.wpm ? ` (${el.wpm} WPM)` : "";
-              const reasonText =
-                el.reason === "error"
-                  ? "[ERROR]"
-                  : el.reason === "corrected"
-                  ? "[CORRECTED]"
-                  : "[CORRECT]";
-              return `${reasonText} ${el.word}${wpmText}`;
-            })
-            .join(", ");
-
-          document.getElementById("lastRecordContainer").textContent =
-            wordsDisplay;
-
-          if (lastRecord.overallWPM) {
-            const wpmDisplay = document.getElementById("overallWPM");
-            if (wpmDisplay) {
-              wpmDisplay.textContent = `Overall WPM: ${lastRecord.overallWPM}`;
-            }
-          }
+          updateDisplayWithRecord(lastRecord);
         }
-        document.getElementById("errorCapacity").textContent =
-          updatedRecords.length + " records";
+        updateRecordCount(updatedRecords.length);
       });
     });
   });
@@ -124,38 +122,12 @@ fileInput.addEventListener("change", () => {
           const merged = [...(res.records || []), ...importedData];
           chrome.storage.local.set({ records: merged });
           if (merged.length === 0) {
-            document.getElementById("lastRecordContainer").textContent = "";
-            const wpmDisplay = document.getElementById("overallWPM");
-            if (wpmDisplay) {
-              wpmDisplay.textContent = "";
-            }
+            clearDisplay();
           } else {
             const lastRecord = merged[merged.length - 1];
-            const wordsDisplay = lastRecord.words
-              .map((el) => {
-                const wpmText = el.wpm ? ` (${el.wpm} WPM)` : "";
-                const reasonText =
-                  el.reason === "error"
-                    ? "[ERROR]"
-                    : el.reason === "corrected"
-                    ? "[CORRECTED]"
-                    : "[CORRECT]";
-                return `${reasonText} ${el.word}${wpmText}`;
-              })
-              .join(", ");
-
-            document.getElementById("lastRecordContainer").textContent =
-              wordsDisplay;
-
-            if (lastRecord.overallWPM) {
-              const wpmDisplay = document.getElementById("overallWPM");
-              if (wpmDisplay) {
-                wpmDisplay.textContent = `Overall WPM: ${lastRecord.overallWPM}`;
-              }
-            }
+            updateDisplayWithRecord(lastRecord);
           }
-          document.getElementById("errorCapacity").textContent =
-            merged.length + " records";
+          updateRecordCount(merged.length);
         });
       } catch (error) {
         console.error("Failed to import JSON:", error);
@@ -168,12 +140,8 @@ fileInput.addEventListener("change", () => {
 document.getElementById("resetButton").addEventListener("click", () => {
   if (confirm("Are you sure you want to clear all records?")) {
     chrome.runtime.sendMessage({ action: "resetAllRecords" });
-    document.getElementById("lastRecordContainer").textContent = "";
-    const wpmDisplay = document.getElementById("overallWPM");
-    if (wpmDisplay) {
-      wpmDisplay.textContent = "";
-    }
-    document.getElementById("errorCapacity").textContent = "0 records";
+    clearDisplay();
+    updateRecordCount(0);
   }
 });
 
