@@ -6,15 +6,19 @@ document.getElementById("debugButton").addEventListener("click", () => {
   // Send a message to the content script to manually trigger processing
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     if (tabs[0] && tabs[0].url && tabs[0].url.includes("monkeytype.com")) {
-      chrome.tabs.sendMessage(tabs[0].id, { action: "debugTrigger" }, (response) => {
-        if (chrome.runtime.lastError) {
-          console.error("Debug trigger error:", chrome.runtime.lastError);
-          alert("Debug trigger failed. Check console for details.");
-        } else {
-          console.log("Debug trigger sent successfully");
-          alert("Debug trigger sent. Check console for results.");
+      chrome.tabs.sendMessage(
+        tabs[0].id,
+        { action: "debugTrigger" },
+        (response) => {
+          if (chrome.runtime.lastError) {
+            console.error("Debug trigger error:", chrome.runtime.lastError);
+            alert("Debug trigger failed. Check console for details.");
+          } else {
+            console.log("Debug trigger sent successfully");
+            alert("Debug trigger sent. Check console for results.");
+          }
         }
-      });
+      );
     } else {
       alert("Please navigate to monkeytype.com first.");
     }
@@ -28,19 +32,23 @@ document.addEventListener("DOMContentLoaded", () => {
       const lastRecord = records[records.length - 1];
       document.getElementById("errorCapacity").textContent =
         records.length + " records";
-      
+
       // Display words with their WPM information
       const wordsDisplay = lastRecord.words
         .map((el) => {
-          const wpmText = el.wpm ? ` (${el.wpm} WPM)` : '';
-          const reasonText = el.reason === 'error' ? '❌' : 
-                           el.reason === 'corrected' ? '⚠️' : '✅';
+          const wpmText = el.wpm ? ` (${el.wpm} WPM)` : "";
+          const reasonText =
+            el.reason === "error"
+              ? "[ERROR]"
+              : el.reason === "corrected"
+              ? "[CORRECTED]"
+              : "[CORRECT]";
           return `${reasonText} ${el.word}${wpmText}`;
         })
         .join(", ");
-      
+
       document.getElementById("lastRecordContainer").textContent = wordsDisplay;
-      
+
       // Display overall WPM if available
       if (lastRecord.overallWPM) {
         const wpmDisplay = document.getElementById("overallWPM");
@@ -71,15 +79,20 @@ document
           const lastRecord = updatedRecords[updatedRecords.length - 1];
           const wordsDisplay = lastRecord.words
             .map((el) => {
-              const wpmText = el.wpm ? ` (${el.wpm} WPM)` : '';
-              const reasonText = el.reason === 'error' ? '❌' : 
-                               el.reason === 'corrected' ? '⚠️' : '✅';
+              const wpmText = el.wpm ? ` (${el.wpm} WPM)` : "";
+              const reasonText =
+                el.reason === "error"
+                  ? "❌"
+                  : el.reason === "corrected"
+                  ? "⚠️"
+                  : "✅";
               return `${reasonText} ${el.word}${wpmText}`;
             })
             .join(", ");
-          
-          document.getElementById("lastRecordContainer").textContent = wordsDisplay;
-          
+
+          document.getElementById("lastRecordContainer").textContent =
+            wordsDisplay;
+
           if (lastRecord.overallWPM) {
             const wpmDisplay = document.getElementById("overallWPM");
             if (wpmDisplay) {
@@ -120,15 +133,20 @@ fileInput.addEventListener("change", () => {
             const lastRecord = merged[merged.length - 1];
             const wordsDisplay = lastRecord.words
               .map((el) => {
-                const wpmText = el.wpm ? ` (${el.wpm} WPM)` : '';
-                const reasonText = el.reason === 'error' ? '❌' : 
-                                 el.reason === 'corrected' ? '⚠️' : '✅';
+                const wpmText = el.wpm ? ` (${el.wpm} WPM)` : "";
+                const reasonText =
+                  el.reason === "error"
+                    ? "❌"
+                    : el.reason === "corrected"
+                    ? "⚠️"
+                    : "✅";
                 return `${reasonText} ${el.word}${wpmText}`;
               })
               .join(", ");
-            
-            document.getElementById("lastRecordContainer").textContent = wordsDisplay;
-            
+
+            document.getElementById("lastRecordContainer").textContent =
+              wordsDisplay;
+
             if (lastRecord.overallWPM) {
               const wpmDisplay = document.getElementById("overallWPM");
               if (wpmDisplay) {
