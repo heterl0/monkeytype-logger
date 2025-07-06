@@ -82,10 +82,10 @@ document
               const wpmText = el.wpm ? ` (${el.wpm} WPM)` : "";
               const reasonText =
                 el.reason === "error"
-                  ? "❌"
+                  ? "[ERROR]"
                   : el.reason === "corrected"
-                  ? "⚠️"
-                  : "✅";
+                  ? "[CORRECTED]"
+                  : "[CORRECT]";
               return `${reasonText} ${el.word}${wpmText}`;
             })
             .join(", ");
@@ -136,10 +136,10 @@ fileInput.addEventListener("change", () => {
                 const wpmText = el.wpm ? ` (${el.wpm} WPM)` : "";
                 const reasonText =
                   el.reason === "error"
-                    ? "❌"
+                    ? "[ERROR]"
                     : el.reason === "corrected"
-                    ? "⚠️"
-                    : "✅";
+                    ? "[CORRECTED]"
+                    : "[CORRECT]";
                 return `${reasonText} ${el.word}${wpmText}`;
               })
               .join(", ");
