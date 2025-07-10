@@ -3,276 +3,194 @@
 
 <head>
     <title>Monkeytype Logger</title>
-    <style>
-        body {
-            width: 300px;
-            padding: 20px;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #2c2c2c;
-            margin: 0;
-            color: #ffffff;
-        }
-
-        .container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 24px;
-        }
-
-        .header {
-            display: flex;
-            flex-direction: row;
-            width: 100%;
-            justify-content: space-between;
-        }
-
-        .header-info {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: flex-start;
-        }
-
-        .logo {
-            width: 48px;
-            height: 48px;
-        }
-
-        .logo-container {
-            position: relative;
-        }
-
-        .title {
-            font-size: 1.5em;
-            font-weight: 600;
-            margin: 0;
-            color: #7DA1E8;
-        }
-
-        .subtitle {
-            font-size: 0.9em;
-            color: #888;
-            margin: 5px 0 0 0;
-        }
-
-        .stats {
-            background: #363636;
-            padding: 15px;
-            border-radius: 8px;
-            width: 100%;
-            box-sizing: border-box;
-        }
-
-        .stat-item {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 8px;
-            font-size: 0.9em;
-        }
-
-        .stat-label {
-            color: #888;
-        }
-
-        .stat-value {
-            color: #7DA1E8;
-            font-weight: 500;
-        }
-
-        .download-button {
-            background: #7DA1E8;
-            color: #1a1a1a;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            width: 100%;
-            font-size: 1em;
-        }
-
-        .download-button:hover {
-            background: #4281FF;
-            transform: translateY(-1px);
-        }
-
-        .download-button:active {
-            transform: translateY(0);
-        }
-
-        .delete-button {
-            background: #e74c3c;
-            color: #ffffff;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            width: 100%;
-            font-size: 1em;
-        }
-
-        .delete-button:hover {
-            background: #c0392b;
-            transform: translateY(-1px);
-        }
-
-        .delete-button:active {
-            transform: translateY(0);
-        }
-
-        .footer {
-            font-size: 0.8em;
-            color: #666;
-            text-align: center;
-            margin-top: 10px;
-        }
-
-        #lastRecordContainer {
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            overflow-y: auto;
-            padding: 10px;
-            color: #ffffff;
-            background: #363636;
-            border-radius: 8px;
-            width: 100%;
-            box-sizing: border-box;
-            max-height: 300px;
-        }
-
-        .container-records {
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .container-records-status {
-            display: flex;
-            flex-direction: row;
-            justify-content: space-between;
-            width: 100%;
-        }
-
-        .error-description {
-            margin-top: 0px;
-            font-size: 0.8em;
-            color: #ffffff;
-            text-align: left;
-        }
-
-        .action-buttons {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-            width: 100%;
-            position: relative;
-        }
-
-        .icon-button {
-            border: none;
-            background: transparent;
-            cursor: pointer;
-            position: absolute;
-        }
-
-        .reset-button {
-            top: -30px;
-            right: 0px;
-        }
-
-        .import-button {
-            top: -32px;
-            right: 24px;
-        }
-
-        .switch-btn {
-            top: -26px;
-            left: 0px;
-            display: flex;
-            flex-direction: row;
-            gap: 4px;
-            align-items: center;
-        }
-
-        .icon {
-            width: 24px;
-            height: 24px;
-        }
-
-        .record-container {
-            font-size: 0.9em;
-            width: 100%;
-        }
-
-        .group-button {
-            display: grid;
-            gap: 16px;
-            width: 100%;
-            grid-template-columns: 1fr 1fr;
-
-        }
-    </style>
+    <link rel="stylesheet" href="popup.css">
 </head>
 
 <body>
     <div class="container">
-        <div class="header">
-            <div>
-                <h1 class="title">Monkeytype Logger</h1>
-                <p class="subtitle">Track your typing progress</p>
+        <!-- Enhanced Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="title-section">
+                    <h1 class="title">Monkeytype Logger</h1>
+                    <p class="subtitle">Track your typing progress</p>
+                </div>
+                <div class="header-controls">
+                    <div class="activation-toggle">
+                        <input type="checkbox" id="switch" class="toggle-input">
+                        <label for="switch" class="toggle-label">
+                            <span class="toggle-slider"></span>
+                            <span class="toggle-text">Active</span>
+                        </label>
+                    </div>
+                    <button class="icon-button settings-btn" id="settingsButton" title="Settings">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <path
+                                d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3A8.994 8.994 0 0 0 13 3.06V1h-2v2.06A8.994 8.994 0 0 0 3.06 11H1v2h2.06A8.994 8.994 0 0 0 11 20.94V23h2v-2.06A8.994 8.994 0 0 0 20.94 13H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z" />
+                        </svg>
+                    </button>
+                </div>
             </div>
-            <div class="logo-container">
-                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%237DA1E8'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z'/%3E%3C/svg%3E"
-                    alt="Logo" class="logo">
-            </div>
-        </div>
-        <div class="container-records">
-            <div class="container-records-status">
-                <p class="error-description">
-                    Words below are recognized as errors
-                </p>
-                <p class="error-description" id="errorCapacity">
-                </p>
-            </div>
-            <p class="error-description" id="overallWPM" style="margin-top: 8px; color: #7DA1E8; font-weight: 500;">
-            </p>
-            <pre id="lastRecordContainer" class="record-container"></pre>
-        </div>
-        <div class="action-buttons">
-            <button id="resetButton" class="icon-button reset-button">
-                <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20fill%3D'%237DA1E8'%20viewBox%3D'0%200%2024%2024'%3E%3Cpath%20d%3D'M4%206h16v2H4zm1%203h14v12H5zm5%202v6h4v-6h-4z'%2F%3E%3C%2Fsvg%3E"
-                    alt="Reset" title="Reset" class="icon">
-            </button>
+        </header>
 
-            <button id="importButton" class="icon-button import-button">
-                <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20fill%3D'%237DA1E8'%20viewBox%3D'0%200%2024%2024'%3E%3Cpath%20d%3D'M9%2011l3%203%203-3m-3-9v12m-9%208s.5-2%209-2%209%202%209%202'%2F%3E%3C%2Fsvg%3E"
-                    alt="Import" title="Import" class="icon">
-            </button>
+        <!-- Stats Dashboard -->
+        <section class="stats-dashboard">
+            <div class="stat-card primary">
+                <div class="stat-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value" id="overallWPM">--</div>
+                    <div class="stat-label">Current WPM</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                        <path
+                            d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z" />
+                    </svg>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value" id="errorCapacity">--</div>
+                    <div class="stat-label">Total Records</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                        <path
+                            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+                    </svg>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value" id="accuracyRate">--</div>
+                    <div class="stat-label">Accuracy</div>
+                </div>
+            </div>
+        </section>
 
-            <div id="activeSwitch" class="switch-btn icon-button">
-                <input type="checkbox" id="switch">
-                <label for="switch">Activate</label>
+        <!-- Recent Activity Section -->
+        <section class="recent-activity">
+            <div class="section-header">
+                <h3 class="section-title">Recent Activity</h3>
+                <button class="text-button" id="viewAllButton">View All</button>
             </div>
-            <div class="group-button">
-                <button id="downloadButton" class="download-button">
-                    Download Records
-                </button>
-                <button id="deleteLastRecordButton" class="delete-button">Delete Last Record</button>
+
+            <div class="activity-container" id="activityContainer">
+                <div class="empty-state" id="emptyState">
+                    <div class="empty-icon">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor" opacity="0.5">
+                            <path
+                                d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 2 2h8c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" />
+                        </svg>
+                    </div>
+                    <p>No typing sessions recorded yet</p>
+                    <p class="empty-subtitle">Start typing on Monkeytype to see your progress</p>
+                </div>
+
+                <pre id="lastRecordContainer" class="record-container"></pre>
             </div>
-            <button id="debugButton" class="download-button" style="margin-top: 8px;">
-                Debug: Trigger Processing
-            </button>
-            <a href="https://monkeytype-analysis.heterl0.live/" target="_blank" id="link-analysis-web">
-                <button class="download-button">
+        </section>
+
+        <!-- Action Panel -->
+        <section class="action-panel">
+            <div class="primary-actions">
+                <a href="https://monkeytype-analysis.heterl0.live/" target="_blank" class="action-button primary">
+                    <span class="button-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z" />
+                        </svg>
+                    </span>
                     View Analysis
+                </a>
+                <button id="downloadButton" class="action-button secondary">
+                    <span class="button-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <path
+                                d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z" />
+                        </svg>
+                    </span>
+                    Export Data
                 </button>
-            </a>
+            </div>
+
+            <div class="secondary-actions">
+                <button id="deleteLastRecordButton" class="action-button danger">
+                    <span class="button-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
+                        </svg>
+                    </span>
+                    Delete Last Record
+                </button>
+            </div>
+        </section>
+
+        <!-- Settings Panel (Hidden by default) -->
+        <section class="settings-panel" id="settingsPanel">
+            <div class="section-header">
+                <h3 class="section-title">Settings</h3>
+                <button class="text-button" id="closeSettingsButton">Close</button>
+            </div>
+
+            <div class="settings-content">
+                <div class="setting-item">
+                    <label class="setting-label">Auto-sync with Monkeytype</label>
+                    <input type="checkbox" class="setting-toggle" id="autoSync">
+                </div>
+
+                <div class="setting-item">
+                    <label class="setting-label">Show notifications</label>
+                    <input type="checkbox" class="setting-toggle" id="showNotifications">
+                </div>
+
+                <div class="setting-item">
+                    <button id="importButton" class="action-button secondary small">
+                        <span class="button-icon">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <path
+                                    d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm-1 7V3.5L18.5 9H13z" />
+                            </svg>
+                        </span>
+                        Import Data
+                    </button>
+                </div>
+
+                <div class="setting-item">
+                    <button id="resetButton" class="action-button danger small">
+                        <span class="button-icon">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <path
+                                    d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" />
+                            </svg>
+                        </span>
+                        Reset All Data
+                    </button>
+                </div>
+
+                <!-- Debug section for developers -->
+                <details class="debug-section">
+                    <summary>Developer Options</summary>
+                    <button id="debugButton" class="action-button secondary small">
+                        Debug: Trigger Processing
+                    </button>
+                </details>
+            </div>
+        </section>
+
+        <!-- Loading Overlay -->
+        <div class="loading-overlay" id="loadingOverlay">
+            <div class="loading-spinner"></div>
+            <p class="loading-text">Processing...</p>
         </div>
+
+        <!-- Toast Notifications -->
+        <div class="toast-container" id="toastContainer"></div>
     </div>
+
     <script src="popup.js"></script>
 </body>
 

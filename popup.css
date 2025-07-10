@@ -235,6 +235,12 @@ body {
   overflow-y: auto;
 }
 
+#lastRecordContainer {
+  max-width: 100%;
+  overflow-x: auto;
+  text-wrap: auto;
+}
+
 .empty-state {
   display: flex;
   align-items: center;
