@@ -316,7 +316,7 @@ class MonkeytypeLoggerPopup {
           if (record.words) {
             totalWords += record.words.length;
             totalErrors += record.words.filter(
-              (w) => w.reason === "error"
+              (w) => w.reason === "error" || w.reason === "corrected"
             ).length;
           }
         });
