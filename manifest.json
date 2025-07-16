@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Monkeytype History Logger",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Logs error and corrected words from Monkeytype tests into a JSON file.",
   "permissions": ["storage", "downloads", "unlimitedStorage", "tabs"],
   "content_scripts": [
