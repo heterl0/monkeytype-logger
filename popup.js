@@ -340,7 +340,7 @@ class MonkeytypeLoggerPopup {
   viewAllRecords() {
     // Open a new tab with detailed analysis
     window.chrome.tabs.create({
-      url: "https://monkeytype-analysis.heterl0.live/",
+      url: "https://monkeytype-logger.vercel.app/",
     });
   }
 
