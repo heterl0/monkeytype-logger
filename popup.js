@@ -86,6 +86,11 @@ class MonkeytypeLoggerPopup {
   }
 
   bindExistingEvents() {
+
+    document.getElementById("localAnalysisButton").addEventListener("click", () => {
+      chrome.tabs.create({ url: chrome.runtime.getURL("feature/analysis/analysis.html") });
+    });
+
     // Original download button logic
     document.getElementById("downloadButton").addEventListener("click", () => {
       window.chrome.runtime.sendMessage({ action: "downloadRecords" });
