@@ -394,9 +394,7 @@ async function processTestResult() {
     }
 
     // Get all letter inside words
-    const letters = wordElem.querySelectorAll(
-      "letter, .letter, [class*='letter'], span, div"
-    );
+    const letters = wordElem.querySelectorAll("letter");
 
     if (letters.length > 0) {
       correctWord = Array.from(letters)
