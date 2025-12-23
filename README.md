@@ -17,8 +17,9 @@ The extension is published on Microsoft Edge Add-ons:
 
 ## Features
 
-- Logs error or corrected words
-- Allows downloading logs as JSON
+- Identifies slow and mistyped words for targeted practice
+- Logs all words typed in Monkeytype
+- Supports exporting logs as JSON-file
 
 ## Monkeytype Settings
 

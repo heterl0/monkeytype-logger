@@ -1,9 +1,17 @@
-import { median } from "./utils.js";
+/* global chrome */
+import {median} from "./util/utils.js";
+import {getMonkeytypeLink} from "./util/text-to-monkeytype-link.js";
+
+// TODO
+// Auto update
+//
 
 // Load data first
 chrome.storage.local.get(["records"], (result) => {
-    const pretty = JSON.stringify(result.records || [], null, 2);
-    document.getElementById("dataOutput").textContent = pretty;
+    document
+        .getElementById("dataOutput")
+        .textContent
+        = JSON.stringify(result.records || [], null, 2);
 });
 
 // Page switching
@@ -70,14 +78,14 @@ if (document.querySelector('.page.active').id === 'overview') loadOverview();
 
 const MIN_OCCURRENCES = 3;
 const MIN_WPM_SAMPLES = 3;
-
+const TEXT_NO_PRACTICE_WORDS = "Please practice in Monkeytype in order to collect data for this analysis."
 
 function loadErrorAnalysis() {
     chrome.storage.local.get(["records"], (result) => {
         const entries = result.records || [];
         const wordStats = {};
 
-        // Process all entries
+
         entries.forEach(entry => {
 
             // currently there is a bug in the data that adds more chars than the word only. This filers there errors out.
@@ -114,6 +122,7 @@ function loadErrorAnalysis() {
         // High mistake words
         const filtered = Object.values(wordStats)
             .filter(ws => ws.occurrences >= MIN_OCCURRENCES)
+            .filter(ws => ws.mistakes > 0)
             .sort((a, b) => (b.mistakes / b.occurrences) - (a.mistakes / a.occurrences));
 
         // Slow words
@@ -121,7 +130,36 @@ function loadErrorAnalysis() {
             .filter(ws => ws.cleanWpmValues.length >= MIN_WPM_SAMPLES);
         slowCandidates.sort((a, b) => median(a.cleanWpmValues) - median(b.cleanWpmValues));
 
-        const slowest = slowCandidates.slice(0, 10);
+
+        displayPracticeWords(slowCandidates.slice(0,10), "practiceSlow", "practice-box-slow-words")
+        displayPracticeWords(filtered.slice(0,10), "practiceMistakes", "practice-box-mistyped-words")
+
+        function displayPracticeWords(words, divLabel, idBox) {
+            const div = document.getElementById(divLabel);
+            const divBox = document.getElementById(idBox);
+            const wordsString = words.map(ws => ws.word).join(" ");
+            const wordsArray = words.map(ws => ws.word)
+
+            function onClick() {
+                if (wordsArray.length > 1) {
+                    const url = getMonkeytypeLink(wordsArray);
+                    window.open(url, "_blank");
+                } else window.open("https://monkeytype.com", "_blank");
+            }
+
+            if (wordsArray.length === 0) {
+                div.textContent  =  TEXT_NO_PRACTICE_WORDS
+                if (divBox.dataset.listenerAdded) divBox.removeEventListener("click", onClick)
+            } else {
+                div.textContent = wordsString;
+            }
+
+            if (!divBox.dataset.listenerAdded) {
+                divBox.addEventListener("click", onClick)
+                divBox.dataset.listenerAdded = "true"; // Mark that listener is added
+            }
+        }
+
 
         // Populate tables
         document.querySelector("#mistakeTable tbody").innerHTML = filtered
@@ -157,10 +195,7 @@ function loadErrorAnalysis() {
         });
 
 
-        // Practice strings
-        document.getElementById("practiceMistakes").textContent = filtered.slice(0,15).map(ws => ws.word).join(" ") || "None";
 
-        document.getElementById("practiceSlow").textContent = slowest.map(ws => ws.word).join(" ") || "None";
 
     });
 
@@ -168,6 +203,9 @@ function loadErrorAnalysis() {
 
     }
 
-// document.querySelector('[data-page="errors"]').addEventListener('click', loadErrorAnalysis);
+document.querySelector('[data-page="errors"]').addEventListener('click', loadErrorAnalysis);
 
 document.querySelector('[data-page="slow"]').addEventListener('click', loadErrorAnalysis);
+
+
+
