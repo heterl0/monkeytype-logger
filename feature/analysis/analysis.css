@@ -96,16 +96,6 @@ tr:hover {
     font-family: monospace;
 }
 
-#practiceSlow {
-    display: block;
-    background: #242424;
-    padding: 20px;
-    margin: 20px 0;
-    border-radius: 8px;
-    font-family: monospace;
-    white-space: pre-wrap;
-    word-break: break-all;
-}
 .highlight {
     margin-top: 10px !important;
 }
@@ -170,10 +160,78 @@ tr:hover {
 
 .practice-box {
     background: #242424;
-    padding: 20px;
-    border-radius: 8px;
+    color: #eaeaea;
+    padding: 16px 20px;
+    border-radius: 10px;
     font-family: monospace;
-    font-size: 1.1rem;
-    margin: 16px 0;
-    min-height: 40px;
+    font-size: 1.05rem;
+    margin: 5px 0 16px 0;
+    display: inline-block;
+    white-space: normal;
+    overflow-wrap: break-word;
+    cursor: pointer;
+
+    /* visual affordance */
+    border: 1px solid #333;
+    transition:
+            transform 0.15s ease,
+            box-shadow 0.15s ease,
+            border-color 0.15s ease,
+            background 0.15s ease;
+}
+
+.practice-box:hover {
+    background: #2b2b2b;
+    border-color: #555;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+    transform: translateY(-2px);
+}
+
+.practice-box:active {
+    transform: translateY(0);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+}
+
+.practice-box:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px #6aa9ff;
+}
+
+/* Title inside the box */
+.practice-title {
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+
+    color: #6aa9ff;
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid rgba(106, 169, 255, 0.25);
+}
+/* Main content */
+.practice-content {
+    margin-bottom: 10px;
+}
+
+/* Subtle “click me” hint */
+.practice-hint {
+    font-size: 1.3em;
+    opacity: 0.6;
+}
+
+.practice-link-indicator {
+    margin-left: 0px;
+    font-size: 1.5em;
+    opacity: 0.7;
+    transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.practice-box:hover .practice-link-indicator {
+    transform: translateX(3px);
+    opacity: 1;
+}
+
+#test {
+    white-space: pre; /* preserves spaces and line breaks */
+    font-family: monospace; /* optional, for better readability */
 }

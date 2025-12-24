@@ -1,7 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="en-US">
 <head>
-    <script src="utils.js" type="module"></script>
+    <script src="lz-string.min.js"></script>
+    <script src="util/utils.js" type="module"></script>
     <script src="analysis.js" type="module"></script>
 
     <link rel="stylesheet" href="analysis.css">
@@ -16,7 +17,7 @@
 
     <button class="menu-item active" data-page="overview">Overview</button>
 
-    <!-- <button class="menu-item" data-page="errors">Mistyped Words</button> -->
+    <button class="menu-item" data-page="errors">Mistyped Words</button>
 
     <button class="menu-item" data-page="slow">Slow Words</button>
 
@@ -30,6 +31,9 @@
 
     <div id="overview" class="page active">
         <h1>Overview</h1>
+
+        <div id="test"></div>
+
         <div class="stat-container">
             <div class="stat-box">
                 <div class="stat-label">Unique words typed</div>
@@ -43,9 +47,29 @@
     </div>
 
     <div id="errors" class="page">
-        <h1>Problem Words Analysis</h1>
-        <div id="practiceMistakes" class="highlight"></div>
-        <h3>Most Problematic Words (High Mistake Rate)</h3>
+        <h1>Mistyped Words</h1>
+
+        <div
+                class="practice-box"
+                role="button"
+                tabindex="0"
+                aria-label="Practice mistyped words"
+                id = "practice-box-mistyped-words"
+        >
+            <div class="practice-title">
+                <span class="practice-link-indicator">&nearr;</span>  Practice! 10 Most Mistyped Words
+            </div>
+
+            <div class="practice-content" id="practiceMistakes">
+                <!-- dynamically filled words go here -->
+            </div>
+
+
+        </div>
+
+
+
+        <h3>Mistyped Words sorted by error rate</h3>
         <table id="mistakeTable">
             <thead><tr><th>Rank</th><th>Word</th><th>Times</th><th>Mistakes</th><th>% Mistakes</th></tr></thead>
             <tbody></tbody>
@@ -63,9 +87,25 @@
             </ul>
         </div>
 
-        <div>10 slowest words to practice:</div>
-        <div id="practiceSlow" class="highlight" style="margin-top:40px;"></div>
-        <small>Go to custom and paste them in there.</small>
+
+        <div
+                class="practice-box"
+                role="button"
+                tabindex="0"
+                aria-label="Practice slow words"
+                id = "practice-box-slow-words"
+        >
+            <div class="practice-title">
+                <span class="practice-link-indicator">&nearr;</span>  Practice! 10 Slowest Words
+            </div>
+
+            <div class="practice-content" id="practiceSlow">
+                <!-- dynamically filled words go here -->
+            </div>
+
+
+        </div>
+
         <h3>Slowest Words (Correct Only)</h3>
         <table id="slowTable">
             <thead><tr><th>Rank</th><th>Word</th><th>Samples</th><th>Median WPM</th></tr></thead>
