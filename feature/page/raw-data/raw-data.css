@@ -1,0 +1,12 @@
+#dataOutput {
+    background: #1e1e1e;
+    padding: 12px;
+    border-radius: 6px;
+    color: #d4d4d4;
+}
+
+.key { color: #9cdcfe; }
+.string { color: #ce9178; }
+.number { color: #b5cea8; }
+.boolean { color: #569cd6; }
+.null { color: #c586c0; }
