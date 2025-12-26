@@ -1,11 +1,14 @@
 <!DOCTYPE html>
 <html lang="en-US">
 <head>
-    <script src="lz-string.min.js"></script>
-    <script src="util/utils.js" type="module"></script>
+    <script src="lib/lz-string.min.js"></script>
+    <script src="util/median.js" type="module"></script>
     <script src="analysis.js" type="module"></script>
 
+
     <link rel="stylesheet" href="analysis.css">
+    <link rel="stylesheet" href="page/raw-data/raw-data.css">
+
 
     <title>Local Analysis</title>
 </head>
@@ -23,7 +26,9 @@
 
     <button class="menu-item" data-page="raw_data_overview">Raw Data Overview</button>
 
-    <button class="menu-item" data-page="raw_data">Raw Data</button>
+    <br> <br> <br> <br>
+
+    <button class="menu-item" data-page="raw_data">(Dev) Raw Data</button>
 
 </div>
 
@@ -113,6 +118,9 @@
         </table>
     </div>
 
+
+    <!-- Page - My Runs -->
+
     <div id="raw_data_overview" class="page">
         <h1>Raw Data Summary</h1>
         <table id="dataTable">
@@ -127,10 +135,17 @@
         </table>
     </div>
 
-    <div id="raw_data" class="page">
+    <!-- End Page -->
+
+    <!-- Page - Raw Data -->
+
+    <selection id="raw_data" class="page">
         <h1>Raw Data</h1>
+
         <pre id="dataOutput"></pre>
-    </div>
+    </selection>
+
+    <!-- End Page -->
 
 </div>
 
