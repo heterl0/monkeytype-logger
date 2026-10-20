@@ -121,6 +121,7 @@ tr:hover {
 
 .stat-container {
     display: flex;
+    flex-wrap: wrap;
     gap: 30px;
     margin: 30px 0;
 }
@@ -234,4 +235,9 @@ tr:hover {
 #test {
     white-space: pre; /* preserves spaces and line breaks */
     font-family: monospace; /* optional, for better readability */
+}
+.mono {
+    font-family: monospace;
+    font-size: 1.1rem;
+    white-space: pre;
 }

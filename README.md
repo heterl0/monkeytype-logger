@@ -21,6 +21,27 @@ The extension is published on Microsoft Edge Add-ons:
 - Logs all words typed in Monkeytype
 - Supports exporting logs as JSON-file
 
+## What is recorded
+
+Every keystroke of a test is logged live, so mistakes you fixed with
+Backspace are kept too. Each saved test has:
+
+- `words`: each typed word with `reason` (`correct`, `corrected`: fixed with
+  Backspace, `error`: left wrong), its speed (`wpm`) and its `mistakes`.
+- `mistakes`: where in the word (`i`, 0-based), the expected (`e`) and typed
+  (`k`) key, the letters before (`p`) and after (`n`) the expected one, the
+  time since the previous key (`t`, ms) and the kind of mistake (`type`:
+  substitution, transposition, omission, insertion, early-space, extra).
+  Only the first wrong key of a run counts; the keys after it are shifted
+  until it is fixed.
+- `keystrokes`: every key with its word, position, expected key and timing.
+
+The **Mistake Patterns** page of the analysis view sums these up: kinds of
+mistakes, wrong-key pairs (such as `ğ → p`), the letter pairs where you miss
+most, per-letter error rates, the pause before each word (it drops when you
+read the next word while typing the current one), and a practice link with
+words that contain your weakest letter pairs.
+
 ## Monkeytype Settings
 
 Make sure "always show words history" is enabled in your Monkeytype account settings

@@ -1,613 +1,344 @@
-// content.js
+// content.js — Monkeytype Logger
+//
+// Records every keystroke while a test runs, instead of scraping the result
+// screen afterwards. Monkeytype rewrote its result page (letter states are now
+// utility classes such as `text-error`, word speeds are no longer attributes),
+// and a mistake you fixed with Backspace never reaches the result screen at
+// all. Logging live keeps that information:
+//
+//   keystrokes: [{ w, i, e, k, t }]  word index, position in the word,
+//                                 expected char, typed key ("⌫" Backspace,
+//                                 "⌫w" delete word), ms since the previous
+//                                 keystroke
+//   words:      [{ w, word, wordCorrected, reason, wpm, mistakes }]
+//   mistakes:   [{ i, e, k, p, n, t, type }]  position in the word
+//                                 (0-based), expected, typed, the letter
+//                                 before and after the expected one (" " at
+//                                 a word edge), ms since the previous
+//                                 keystroke, and the kind of mistake (see
+//                                 analyzer.js). In "kanat", missing the
+//                                 second "a" is { i: 3, e: "a", p: "n",
+//                                 n: "t" }.
+//
+// `word`, `wordCorrected`, `reason` and `wpm` keep the original record format,
+// so the popup and the analysis pages keep working.
+//
+// Our own input buffer, not the DOM, tracks progress: Monkeytype redraws the
+// active word on the next animation frame, so two quick keystrokes can both
+// land before the DOM catches up.
+//
+// For the same reason a word's target text read at its first keystroke can
+// be stale (start typing during the restart fade and the old words are still
+// on screen). So keystrokes are stored raw, the target is re-read on each of
+// the word's keystrokes, and `e`, `i` and the mistakes are derived from the
+// final target only when the test is saved (analyzer.js).
 
-// Add debugging to help identify issues
-console.log("MonkeyType Logger: Content script loaded");
+(() => {
+  const LOG = (...a) => console.log("MonkeyType Logger:", ...a);
 
-// Wait for the target element to be available
-function waitForElement(selector, callback, maxAttempts = 20) {
-  const el = document.querySelector(selector);
-  if (el) {
-    console.log("MonkeyType Logger: Found element", selector);
-    callback(el);
-  } else if (maxAttempts > 0) {
-    console.log(
-      "MonkeyType Logger: Waiting for element",
-      selector,
-      "attempts left:",
-      maxAttempts
-    );
-    setTimeout(() => waitForElement(selector, callback, maxAttempts - 1), 500);
-  } else {
-    console.error("MonkeyType Logger: Failed to find element", selector);
-  }
-}
+  // The DOM may trail our own state by a frame or two while typing. Only
+  // trust it over our state after a pause this long (a restart or a jump
+  // back into an earlier word always comes after one).
+  const DOM_TRUST_MS = 150;
 
-// Try multiple possible selectors for the results container
-function findResultsContainer() {
-  const possibleSelectors = [
-    "#resultWordsHistory",
-    ".resultWordsHistory",
-    "[data-testid='resultWordsHistory']",
-    ".words",
-    "#words",
-    ".result .words",
-  ];
+  // ---- per-test state -----------------------------------------------------
+  let keystrokes = [];
+  let words = new Map(); // word index -> { target, typed, keys, firstT, lastT }
+  let wordIdx = 0;
+  let input = "";
+  let lastT = null;
+  let saved = false;
+  let resultSeenAt = null; // when the result screen appeared for this test
 
-  for (const selector of possibleSelectors) {
-    const el = document.querySelector(selector);
-    if (el) {
-      console.log(
-        "MonkeyType Logger: Found results container with selector:",
-        selector
-      );
-      return el;
-    }
-  }
-
-  // If no specific container found, look for any element with word elements
-  const wordElements = document.querySelectorAll(
-    '.word, [class*="word"], .letter, [class*="letter"]'
-  );
-  if (wordElements.length > 0) {
-    console.log(
-      "MonkeyType Logger: Found word elements, using parent container"
-    );
-    return wordElements[0].parentElement;
-  }
-
-  return null;
-}
-
-// Function to wait for individual WPM data to become available
-function waitForIndividualWPMData(wordElements, maxWaitTime = 5000) {
-  return new Promise((resolve) => {
-    const startTime = Date.now();
-
-    function checkForWPMData() {
-      // Check if any word elements have WPM data
-      let hasWPMData = false;
-      let wpmDataCount = 0;
-
-      for (const wordElem of wordElements) {
-        const wpm = extractIndividualWPM(wordElem);
-        if (wpm) {
-          hasWPMData = true;
-          wpmDataCount++;
-        }
-      }
-
-      console.log(
-        "MonkeyType Logger: WPM data check - found",
-        wpmDataCount,
-        "words with WPM data out of",
-        wordElements.length
-      );
-
-      // Consider data available if we have WPM for at least 25% of words or timeout reached
-      const hasEnoughData =
-        wpmDataCount > 0 &&
-        (wpmDataCount >= wordElements.length * 0.25 ||
-          Date.now() - startTime > maxWaitTime);
-
-      if (hasEnoughData) {
-        console.log(
-          "MonkeyType Logger: WPM data check completed, has sufficient data:",
-          hasWPMData
-        );
-        resolve(hasWPMData);
-      } else {
-        // Check again in 200ms
-        setTimeout(checkForWPMData, 200);
-      }
-    }
-
-    checkForWPMData();
-  });
-}
-
-// Function to extract individual WPM data for each word
-function extractIndividualWPM(wordElement) {
-  // Extract WPM from the 'burst' attribute (this is the individual word WPM)
-  const burstAttr = wordElement.getAttribute("burst");
-  if (burstAttr) {
-    const wpm = parseFloat(burstAttr);
-    if (!isNaN(wpm)) {
-      console.log("MonkeyType Logger: Found WPM from burst attribute:", wpm);
-      return wpm;
-    }
+  function resetTest() {
+    keystrokes = [];
+    words = new Map();
+    wordIdx = 0;
+    input = "";
+    lastT = null;
+    saved = false;
+    resultSeenAt = null;
+    cfg = readConfig();
   }
 
-  // Fallback: Try to get WPM from data attributes
-  const wpmAttr =
-    wordElement.getAttribute("data-wpm") ||
-    wordElement.getAttribute("wpm") ||
-    wordElement.getAttribute("data-individual-wpm");
+  // ---- DOM helpers --------------------------------------------------------
+  const activeWordEl = () => document.querySelector("#words .word.active");
 
-  if (wpmAttr) {
-    const wpm = parseFloat(wpmAttr);
-    if (!isNaN(wpm)) {
-      return wpm;
-    }
-  }
+  const indexOf = (el) => Number(el?.getAttribute("data-wordindex") ?? NaN);
 
-  // Look for WPM in child elements or tooltip data
-  const wpmElement = wordElement.querySelector(
-    '[data-wpm], .wpm, [class*="wpm"]'
-  );
-  if (wpmElement) {
-    const wpmText = wpmElement.textContent || wpmElement.innerText || "";
-    const wpmMatch = wpmText.match(/(\d+(?:\.\d+)?)/);
-    if (wpmMatch) {
-      return parseFloat(wpmMatch[1]);
-    }
-  }
-
-  // Check for WPM in title attribute (common for tooltips)
-  const titleAttr = wordElement.getAttribute("title");
-  if (titleAttr) {
-    const wpmMatch =
-      titleAttr.match(/wpm[:\s]*(\d+(?:\.\d+)?)/i) ||
-      titleAttr.match(/(\d+(?:\.\d+)?)\s*wpm/i);
-    if (wpmMatch) {
-      return parseFloat(wpmMatch[1]);
-    }
-  }
-
-  return null;
-}
-
-// Function to simulate hover and extract WPM tooltip data
-function getWPMFromHover(wordElement) {
-  return new Promise((resolve) => {
-    // Create a temporary event to trigger any hover-based tooltips
-    const mouseenterEvent = new MouseEvent("mouseenter", {
-      bubbles: true,
-      cancelable: true,
-      view: window,
-    });
-
-    const mouseleaveEvent = new MouseEvent("mouseleave", {
-      bubbles: true,
-      cancelable: true,
-      view: window,
-    });
-
-    // Trigger mouseenter
-    wordElement.dispatchEvent(mouseenterEvent);
-
-    // Wait a bit for any tooltips to appear
-    setTimeout(() => {
-      // Look for tooltips or popups that might contain WPM data
-      const tooltips = document.querySelectorAll(
-        '.tooltip, .popup, [class*="tooltip"], [class*="popup"], [data-tooltip]'
-      );
-      let wpmValue = null;
-
-      for (const tooltip of tooltips) {
-        const tooltipText = tooltip.textContent || tooltip.innerText || "";
-        // Look for WPM patterns in tooltip text
-        const wpmMatch =
-          tooltipText.match(/wpm[:\s]*(\d+(?:\.\d+)?)/i) ||
-          tooltipText.match(/(\d+(?:\.\d+)?)\s*wpm/i);
-        if (wpmMatch) {
-          wpmValue = parseFloat(wpmMatch[1]);
-          break;
-        }
-      }
-
-      // Also check if the word element itself has updated with WPM data
-      if (!wpmValue) {
-        wpmValue = extractIndividualWPM(wordElement);
-      }
-
-      // Trigger mouseleave
-      wordElement.dispatchEvent(mouseleaveEvent);
-
-      resolve(wpmValue);
-    }, 100);
-  });
-}
-
-// Function to extract WPM data from the test summary
-function extractWPMData() {
-  console.log("MonkeyType Logger: Extracting WPM data");
-
-  // Try multiple selectors for WPM information
-  const wpmSelectors = [
-    '[data-testid="wpm"]',
-    ".wpm",
-    ".stats .wpm",
-    ".result .wpm",
-    ".summary .wpm",
-    '[class*="wpm"]',
-  ];
-
-  let wpmElement = null;
-  for (const selector of wpmSelectors) {
-    wpmElement = document.querySelector(selector);
-    if (wpmElement) {
-      console.log(
-        "MonkeyType Logger: Found WPM element with selector:",
-        selector
-      );
-      break;
-    }
-  }
-
-  if (wpmElement) {
-    const wpmText = wpmElement.textContent || wpmElement.innerText || "";
-    const wpmMatch = wpmText.match(/(\d+(?:\.\d+)?)/);
-    if (wpmMatch) {
-      const wpm = parseFloat(wpmMatch[1]);
-      console.log("MonkeyType Logger: Extracted WPM:", wpm);
-      return wpm;
-    }
-  }
-
-  // If no WPM found, try to extract from other summary elements
-  const summaryElements = document.querySelectorAll(
-    '.stats, .summary, .result, [class*="stat"], [class*="summary"]'
-  );
-  for (const element of summaryElements) {
-    const text = element.textContent || element.innerText || "";
-    const wpmMatch = text.match(/wpm[:\s]*(\d+(?:\.\d+)?)/i);
-    if (wpmMatch) {
-      const wpm = parseFloat(wpmMatch[1]);
-      console.log("MonkeyType Logger: Extracted WPM from summary:", wpm);
-      return wpm;
-    }
-  }
-
-  console.log("MonkeyType Logger: No WPM data found");
-  return null;
-}
-
-// Initialize when DOM is ready
-function initializeLogger() {
-  const resultsContainer = findResultsContainer();
-
-  if (resultsContainer) {
-    console.log(
-      "MonkeyType Logger: Initializing observer on results container"
+  // Letters of the target word (not over-typed extras or decorations).
+  const targetLetters = (el) =>
+    Array.from(el.querySelectorAll("letter")).filter(
+      (l) =>
+        !l.classList.contains("extra") &&
+        !l.classList.contains("invisible") &&
+        !l.classList.contains("dead")
     );
 
-    const observer = new MutationObserver((mutations) => {
-      console.log("MonkeyType Logger: DOM mutation detected");
-      // Add a small delay to ensure the DOM is fully updated
-      setTimeout(() => processTestResult(), 100);
-    });
+  const typedCount = (el) =>
+    targetLetters(el).filter(
+      (l) => l.classList.contains("correct") || l.classList.contains("incorrect")
+    ).length + el.querySelectorAll("letter.extra").length;
 
-    observer.observe(resultsContainer, {
-      childList: true,
-      subtree: true,
-      attributes: true,
-      attributeFilter: ["class", "burst", "data-wpm", "data-individual-wpm"],
-    });
-
-    // Also try to process immediately in case results are already there
-    setTimeout(() => processTestResult(), 500);
-  } else {
-    console.log(
-      "MonkeyType Logger: No results container found, retrying in 1 second"
+  function targetOf(idx) {
+    const el = document.querySelector(`#words .word[data-wordindex="${idx}"]`);
+    if (!el) return "";
+    const nl = el.querySelector("letter.nlChar") ? "\n" : "";
+    return (
+      targetLetters(el)
+        .filter(
+          (l) => !l.classList.contains("nlChar") && !l.classList.contains("tabChar")
+        )
+        .map((l) => l.textContent)
+        .join("") + nl
     );
-    setTimeout(initializeLogger, 1000);
-  }
-}
-
-// Start initialization when DOM is ready
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", initializeLogger);
-} else {
-  initializeLogger();
-}
-
-// Add message listener for debug triggers from popup
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.action === "debugTrigger") {
-    console.log("MonkeyType Logger: Debug trigger received");
-    processTestResult();
-    sendResponse({ success: true });
-  }
-});
-
-async function processTestResult() {
-  console.log("MonkeyType Logger: Processing test result");
-
-  // Extract overall WPM data first
-  const overallWPM = extractWPMData();
-
-  // Try multiple selectors for the words container
-  const possibleWordSelectors = [
-    "#resultWordsHistory .words",
-    ".resultWordsHistory .words",
-    ".words",
-    "#words",
-    ".result .words",
-    "[class*='word']",
-  ];
-
-  let wordsContainer = null;
-  for (const selector of possibleWordSelectors) {
-    wordsContainer = document.querySelector(selector);
-    if (wordsContainer) {
-      console.log(
-        "MonkeyType Logger: Found words container with selector:",
-        selector
-      );
-      break;
-    }
-  }
-  if (!wordsContainer) {
-    console.log("MonkeyType Logger: No words container found");
-    return;
   }
 
-  // Try multiple selectors for word elements
-  const wordElements = wordsContainer.querySelectorAll(
-    ".word, [class*='word'], .letter, [class*='letter']"
-  );
-  console.log("MonkeyType Logger: Found", wordElements.length, "word elements");
-
-  if (wordElements.length === 0) {
-    console.log("MonkeyType Logger: No word elements found");
-    return;
+  function wordState(idx) {
+    let w = words.get(idx);
+    if (!w) {
+      // Read when the word is first reached, before any of it is typed, so
+      // the letters still show the target text.
+      w = { target: targetOf(idx), typed: "", keys: [], firstT: null, lastT: null };
+      words.set(idx, w);
+    }
+    return w;
   }
 
-  // Wait for individual WPM data to become available
-  console.log("MonkeyType Logger: Waiting for individual WPM data...");
+  // Monkeytype mounts #result only while the result screen is shown.
+  const resultShown = () => !!document.getElementById("result");
 
-  // Try both approaches: mutation observer and polling
-  const [observerResult, pollingResult] = await Promise.race([
-    observeForWPMData(wordElements).then((result) => [result, false]),
-    waitForIndividualWPMData(wordElements).then((result) => [false, result]),
-  ]);
+  // Is this keystroke typing into the test? Monkeytype types into
+  // #wordsInput. When that input has lost focus, Monkeytype's own handler
+  // refocuses it on the key press and types the key, so a key with nothing
+  // else focused counts too, unless the result screen is up.
+  function typingActive() {
+    const inputEl = document.getElementById("wordsInput");
+    if (!inputEl || !document.querySelector("#words")) return false;
+    // the test area is hidden behind the result screen
+    if (document.getElementById("typingTest")?.classList.contains("hidden")) return false;
+    const a = document.activeElement;
+    if (a === inputEl) return true;
+    const otherField =
+      a && (a.tagName === "INPUT" || a.tagName === "TEXTAREA" || a.isContentEditable);
+    return !otherField && !resultShown();
+  }
 
-  const hasWPMData = observerResult || pollingResult;
-  console.log(
-    "MonkeyType Logger: WPM data detection completed - observer:",
-    observerResult,
-    "polling:",
-    pollingResult
-  );
-
-  const wordsData = [];
-
-  // Process words sequentially to avoid overwhelming the page with hover events
-  for (let i = 0; i < wordElements.length; i++) {
-    const wordElem = wordElements[i];
-
-    // Improved word extraction
-    let wordInput = "";
-    let correctWord = "";
-
-    // Try to get word from data attributes first
-    wordInput =
-      wordElem.getAttribute("data-word") ||
-      wordElem.getAttribute("input") ||
-      wordElem.getAttribute("text");
-
-    // If no data attribute, try to extract from text content
-    if (!wordInput) {
-      // Get all text content from the element and its children
-      const textContent = wordElem.textContent || wordElem.innerText || "";
-      wordInput = textContent.trim();
+  // ---- keystroke capture --------------------------------------------------
+  function syncWithDom(now) {
+    // The result screen came and went (a quick restart) before its stats
+    // were rendered: save the test now, without them.
+    if (resultSeenAt !== null && !saved) save();
+    if (saved) {
+      // first keystroke after a saved result: a new test
+      resetTest();
     }
+    const paused = lastT === null || now - lastT > DOM_TRUST_MS;
+    if (!paused) return;
 
-    // Get all letter inside words
-    const letters = wordElem.querySelectorAll("letter");
+    const el = activeWordEl();
+    const domIdx = indexOf(el);
+    if (Number.isNaN(domIdx)) return;
 
-    if (letters.length > 0) {
-      correctWord = Array.from(letters)
-        .map((el) => el.textContent || el.innerText || "")
-        .join("")
-        .trim();
-
-      if (!wordInput) {
-        wordInput = correctWord;
-      }
+    // A restart: word 0 active and nothing typed, while we had progress.
+    if (domIdx === 0 && typedCount(el) === 0 && (wordIdx > 0 || input !== "")) {
+      LOG("restart detected, discarding the unfinished test");
+      resetTest();
+      return;
     }
+    if (domIdx === wordIdx) return;
 
-    if (!wordInput) {
-      console.log("MonkeyType Logger: Could not extract word from element", i);
-      continue;
-    }
+    // Follow the DOM (e.g. Backspace back into a previous word).
+    wordIdx = domIdx;
+    const w = wordState(domIdx);
+    input = w.typed.slice(0, typedCount(el));
+  }
 
-    let reason = "";
+  // `e` and `i` are provisional here; `replay` sets the final values.
+  function record(w, expected, key, now) {
+    const t = lastT === null ? 0 : Math.round(now - lastT);
+    lastT = now;
+    const ks = { w: wordIdx, i: input.length, e: expected, k: key, t };
+    keystrokes.push(ks);
+    w.keys.push(ks);
+  }
 
-    // Improved error detection - check multiple possible class names and attributes
-    const hasErrorClass =
-      wordElem.classList.contains("error") ||
-      wordElem.classList.contains("incorrect") ||
-      wordElem.classList.contains("wrong") ||
-      wordElem.classList.contains("mistake");
-
-    const hasCorrectedClass =
-      wordElem.querySelector(".corrected") ||
-      wordElem.querySelector(".incorrect") ||
-      wordElem.querySelector(".wrong") ||
-      wordElem.querySelector(".mistake");
-
-    const hasErrorAttribute =
-      wordElem.getAttribute("data-error") === "true" ||
-      wordElem.getAttribute("data-incorrect") === "true";
-
-    // Check if any child elements have error classes
-    const hasErrorChild = wordElem.querySelector(
-      ".error, .incorrect, .wrong, .mistake"
-    );
-
-    if (hasErrorClass || hasErrorAttribute || hasErrorChild) {
-      reason = "error";
-    } else if (hasCorrectedClass) {
-      reason = "corrected";
-    } else {
-      reason = "correct"; // Log all words, not just errors
-    }
-
-    // Skip overly long words (likely not real words)
-    if (wordInput.length >= 20) {
-      console.log("MonkeyType Logger: Skipping long word:", wordInput);
-      continue;
-    }
-
-    // Try to extract individual WPM data
-    let wordWPM = overallWPM; // Default to overall WPM
-
-    // First try direct extraction
-    const directWPM = extractIndividualWPM(wordElem);
-    if (directWPM) {
-      wordWPM = directWPM;
-    } else {
-      // Try hover-based extraction
-      try {
-        wordWPM = await getWPMFromHover(wordElem);
-        if (!wordWPM) {
-          wordWPM = overallWPM; // Fallback to overall WPM
-        }
-      } catch (error) {
-        console.log(
-          "MonkeyType Logger: Error extracting WPM from hover for word:",
-          wordInput,
-          error
-        );
-        wordWPM = overallWPM;
-      }
-    }
-
-    console.log(
-      "MonkeyType Logger: Found word:",
-      wordInput,
-      "reason:",
-      reason,
-      "WPM:",
-      wordWPM
-    );
-
-    // Create word data object with WPM
-    const wordData = {
-      word: wordInput,
-      wordCorrected: correctWord,
-      reason,
-      wpm: wordWPM,
+  // Monkeytype's own settings that change what a key does, read once per
+  // test from its saved config.
+  //   typosReplace: with "indicate typos: replace/both" a mistyped letter
+  //     shows the typed key instead of the target, so the target can only be
+  //     trusted before the word is typed.
+  //   backIntoWords / backspace: whether Backspace on an empty word goes back
+  //     into the previous one (only if that word is wrong, or always in
+  //     freedom mode; never in confidence mode), and whether Backspace works
+  //     at all ("max" confidence mode).
+  function readConfig() {
+    let c = {};
+    try {
+      c = JSON.parse(localStorage.getItem("config") || "{}") || {};
+    } catch {}
+    return {
+      typosReplace: c.indicateTypos === "replace" || c.indicateTypos === "both",
+      freedom: c.freedomMode === true,
+      backIntoWords: c.confidenceMode !== "on" && c.confidenceMode !== "max",
+      backspace: c.confidenceMode !== "max",
     };
+  }
+  let cfg = readConfig();
 
-    wordsData.push(wordData);
+  // Re-read a word's target, so a stale first read (old words still on
+  // screen during a restart) is replaced once the screen has caught up.
+  function refreshTarget(idx) {
+    if (cfg.typosReplace) return;
+    const fresh = targetOf(idx);
+    if (fresh) words.get(idx).target = fresh;
+  }
 
-    // Small delay between words to avoid overwhelming the page
-    if (i < wordElements.length - 1) {
-      await new Promise((resolve) => setTimeout(resolve, 50));
+  function onKeyDown(ev) {
+    if (!typingActive()) return;
+    if (ev.metaKey || (ev.altKey && !ev.ctrlKey)) return; // AltGr = Ctrl+Alt
+    const now = performance.now();
+    syncWithDom(now);
+
+    const w = wordState(wordIdx);
+    refreshTarget(wordIdx);
+    const target = w.target;
+    const expected = input.length < target.length ? target[input.length] : " ";
+
+    if (ev.key === "Backspace") {
+      if (!cfg.backspace) return;
+      const ctrl = ev.ctrlKey && !ev.altKey;
+      let cur = w;
+      if (input === "") {
+        // Back into the previous word: Monkeytype restores what was typed
+        // there and deletes nothing (Ctrl+Backspace clears that word). The
+        // key is recorded in that word, where analyzer.js reads a Backspace
+        // right after the committing space as this jump.
+        const prev = words.get(wordIdx - 1);
+        if (!prev || !cfg.backIntoWords) return;
+        if (!cfg.freedom && prev.typed === prev.target.replace(/\n$/, "")) return;
+        wordIdx -= 1;
+        cur = prev;
+        input = ctrl ? "" : prev.typed;
+      } else {
+        input = ctrl ? "" : input.slice(0, -1);
+      }
+      record(cur, expected, ctrl ? "⌫w" : "⌫", now);
+      cur.typed = input;
+      return;
     }
-  }
 
-  if (wordsData.length === 0) {
-    console.log("MonkeyType Logger: No words found to log");
-    return;
-  }
+    let key = ev.key;
+    if (key === "Enter") key = "\n";
+    if (key.length !== 1 && key !== "\n") return; // Shift, Tab, arrows, ...
+    if (ev.ctrlKey && !ev.altKey) return; // shortcuts, not typing
 
-  console.log(
-    "MonkeyType Logger: Logging",
-    wordsData.length,
-    "words with individual WPM data"
-  );
+    // Space on an empty word does nothing in Monkeytype.
+    if ((key === " " || key === "\n") && input === "") return;
 
-  // Create a record with an id (using timestamp) and the current date/time.
-  const record = {
-    id: Date.now(),
-    time: new Date().toISOString(),
-    words: wordsData,
-    overallWPM: overallWPM,
-  };
+    // A word's time starts at the previous keystroke (normally the space
+    // that ended the word before it), like Monkeytype's burst speed.
+    if (w.firstT === null) w.firstT = lastT ?? now;
+    record(w, expected, key, now);
+    w.lastT = now;
 
-  // Send the record to the background script for storage
-  chrome.runtime.sendMessage({ action: "saveRecord", record }, (response) => {
-    if (chrome.runtime.lastError) {
-      console.error(
-        "MonkeyType Logger: Error sending message:",
-        chrome.runtime.lastError
-      );
+    if (key === " " || (key === "\n" && expected === "\n")) {
+      w.typed = input; // word committed
+      wordIdx += 1;
+      input = "";
     } else {
-      console.log("MonkeyType Logger: Record sent successfully");
+      input += key;
+      w.typed = input;
     }
-  });
-}
+  }
 
-// Function to observe for WPM data loading
-function observeForWPMData(wordElements) {
-  return new Promise((resolve) => {
-    // Create a mutation observer to watch for WPM data being added
-    const observer = new MutationObserver((mutations) => {
-      let wpmDataFound = false;
+  document.addEventListener("keydown", onKeyDown, true);
 
-      for (const mutation of mutations) {
-        if (mutation.type === "attributes") {
-          const target = mutation.target;
-          // Check if the mutation added WPM-related attributes
-          if (
-            mutation.attributeName === "burst" ||
-            mutation.attributeName === "data-wpm" ||
-            mutation.attributeName === "title" ||
-            mutation.attributeName === "data-individual-wpm"
-          ) {
-            const wpm = extractIndividualWPM(target);
-            if (wpm) {
-              wpmDataFound = true;
-              console.log(
-                "MonkeyType Logger: WPM data found via mutation observer on",
-                mutation.attributeName,
-                "attribute"
-              );
-              break;
-            }
-          }
-        } else if (mutation.type === "childList") {
-          // Check if new elements with WPM data were added
-          for (const node of mutation.addedNodes) {
-            if (node.nodeType === Node.ELEMENT_NODE) {
-              const wpm = extractIndividualWPM(node);
-              if (wpm) {
-                wpmDataFound = true;
-                break;
-              }
-            }
-          }
+  // ---- result -------------------------------------------------------------
+  function readStat(i) {
+    const els = document.querySelectorAll('[data-ui-element="resultStatValue"]');
+    const txt = els[i]?.textContent ?? "";
+    const n = parseFloat(txt.replace(",", ".").replace(/[^0-9.]/g, ""));
+    return Number.isFinite(n) ? n : null;
+  }
+
+  function buildRecord() {
+    const out = [];
+    for (const idx of [...words.keys()].sort((a, b) => a - b)) {
+      const w = words.get(idx);
+      if (w.firstT === null) continue; // never typed
+      const mistakes = globalThis.MTLAnalyzer.analyzeWord(w.target, w.keys);
+      const target = w.target.replace(/\n$/, "");
+      const typed = w.typed;
+      const reason =
+        typed !== target ? "error" : mistakes.length > 0 ? "corrected" : "correct";
+      // Word speed like Monkeytype's burst: characters incl. the space, from
+      // the keystroke before the word to its last keystroke.
+      let wpm = null;
+      const ms = w.lastT - w.firstT;
+      if (ms > 0 && typed.length > 0) {
+        wpm = Math.round((typed.length + 1) / 5 / (ms / 60000));
+      }
+      out.push({ w: idx, word: typed, wordCorrected: target, reason, wpm, mistakes });
+    }
+    return {
+      id: Date.now(),
+      time: new Date().toISOString(),
+      overallWPM: readStat(0),
+      accuracy: readStat(1),
+      words: out,
+      keystrokes,
+    };
+  }
+
+  function save() {
+    if (saved || keystrokes.length === 0) return;
+    const rec = buildRecord();
+    if (rec.words.length === 0) return;
+    saved = true;
+    LOG(
+      `saving test: ${rec.words.length} words, ${rec.keystrokes.length} keystrokes,`,
+      `${rec.overallWPM} wpm, ${rec.accuracy}% acc`
+    );
+    try {
+      chrome.runtime.sendMessage({ action: "saveRecord", record: rec }, () => {
+        if (chrome.runtime.lastError) {
+          console.error("MonkeyType Logger: save failed", chrome.runtime.lastError);
         }
-      }
-
-      if (wpmDataFound) {
-        console.log(
-          "MonkeyType Logger: WPM data detected via mutation observer"
-        );
-        observer.disconnect();
-        resolve(true);
-      }
-    });
-
-    // Observe all word elements for changes
-    for (const wordElem of wordElements) {
-      observer.observe(wordElem, {
-        attributes: true,
-        attributeFilter: ["burst", "data-wpm", "title", "data-individual-wpm"],
-        childList: true,
-        subtree: true,
       });
+    } catch (e) {
+      // The extension was reloaded or updated while this tab stayed open:
+      // this copy of the script is cut off and can no longer save.
+      console.error(
+        "MonkeyType Logger: extension was reloaded, refresh this tab (F5) to log again",
+        e
+      );
     }
+  }
 
-    // Also observe the parent container for any WPM-related changes
-    if (wordElements.length > 0) {
-      const parentContainer = wordElements[0].parentElement;
-      if (parentContainer) {
-        observer.observe(parentContainer, {
-          attributes: true,
-          childList: true,
-          subtree: true,
-        });
-      }
+  // Notice the result screen the moment it is mounted, however briefly it
+  // stays: with a quick restart it can be gone within a few hundred ms.
+  new MutationObserver(() => {
+    if (resultSeenAt === null && keystrokes.length > 0 && resultShown()) {
+      resultSeenAt = performance.now();
     }
+  }).observe(document.documentElement, { childList: true, subtree: true });
 
-    // Set a timeout to stop observing if no data is found
-    setTimeout(() => {
-      observer.disconnect();
-      resolve(false);
-    }, 3000);
+  // Save once the result stats are rendered (they are drawn a little after
+  // the screen appears), or after 2 s without them. A quick restart saves
+  // earlier, from syncWithDom.
+  const STATS_WAIT_MS = 2000;
+  setInterval(() => {
+    if (saved || resultSeenAt === null) return;
+    if (readStat(0) !== null || performance.now() - resultSeenAt > STATS_WAIT_MS) save();
+  }, 100);
+
+  chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message.action === "debugTrigger") {
+      save();
+      sendResponse({ success: true });
+    }
   });
-}
+
+  LOG("live keystroke logging active");
+})();

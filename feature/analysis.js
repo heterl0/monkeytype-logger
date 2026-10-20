@@ -17,6 +17,7 @@ import { setupPageSwitcher }        from "/feature/page/pager-switcher.js";
 import { renderBoxPracticeWords }   from "/feature/page/box-practice-words.js";
 import { renderMistakesPage }       from "/feature/page/mistakes/mistakes.js";
 import { renderPageSlow }           from "/feature/page/slow/slow.js";
+import { renderPatternsPage }       from "/feature/page/patterns/patterns.js";
 
 setupPageSwitcher()
 renderRawData()
@@ -24,6 +25,7 @@ renderStatistics().catch(console.error);
 renderRuns()
 renderMistakesPage().catch(console.error);
 renderPageSlow().catch(console.error);
+renderPatternsPage().catch(console.error);
 
 chrome.storage.onChanged.addListener((changes, area) => {
     if (area === "local" && changes.records) {
@@ -33,6 +35,7 @@ chrome.storage.onChanged.addListener((changes, area) => {
         renderRuns()
         renderMistakesPage().catch(console.error);
         renderPageSlow().catch(console.error);
+        renderPatternsPage().catch(console.error);
     }
 });
 
