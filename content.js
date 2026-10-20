@@ -186,6 +186,24 @@
   }
   let cfg = readConfig();
 
+  // The test's settings (language, mode, length, ...) from Monkeytype's
+  // config, read when the test is saved, so 1k and 5k word lists can be told
+  // apart later.
+  function readTestSettings() {
+    let c = {};
+    try {
+      c = JSON.parse(localStorage.getItem("config") || "{}") || {};
+    } catch {}
+    const length = { time: c.time, words: c.words, quote: c.quoteLength }[c.mode];
+    return {
+      language: c.language ?? null,
+      mode: c.mode ?? null,
+      mode2: Array.isArray(length) ? length.join(",") : length ?? null,
+      punctuation: c.punctuation ?? null,
+      numbers: c.numbers ?? null,
+    };
+  }
+
   // Re-read a word's target, so a stale first read (old words still on
   // screen during a restart) is replaced once the screen has caught up.
   function refreshTarget(idx) {
@@ -286,6 +304,7 @@
       time: new Date().toISOString(),
       overallWPM: readStat(0),
       accuracy: readStat(1),
+      ...readTestSettings(),
       words: out,
       keystrokes,
     };
@@ -301,9 +320,14 @@
       `${rec.overallWPM} wpm, ${rec.accuracy}% acc`
     );
     try {
-      chrome.runtime.sendMessage({ action: "saveRecord", record: rec }, () => {
-        if (chrome.runtime.lastError) {
+      chrome.runtime.sendMessage({ action: "saveRecord", record: rec }, (res) => {
+        if (chrome.runtime.lastError || !res) {
           console.error("MonkeyType Logger: save failed", chrome.runtime.lastError);
+          toast("Monkeytype Logger: test not saved", true);
+        } else if (res.success) {
+          toast(`Monkeytype Logger: test saved (${res.recordCount})`);
+        } else if (res.reason !== "deactivated") {
+          toast(`Monkeytype Logger: test not saved (${res.reason})`, true);
         }
       });
     } catch (e) {
@@ -313,7 +337,34 @@
         "MonkeyType Logger: extension was reloaded, refresh this tab (F5) to log again",
         e
       );
+      toast("Monkeytype Logger was updated: refresh this tab (F5) to keep logging", true);
     }
+  }
+
+  // A short note in the corner, so a test that was not logged is noticed
+  // right away.
+  function toast(text, warn = false) {
+    document.getElementById("mtl-toast")?.remove();
+    const el = document.createElement("div");
+    el.id = "mtl-toast";
+    el.textContent = text;
+    Object.assign(el.style, {
+      position: "fixed",
+      bottom: "16px",
+      right: "16px",
+      zIndex: 99999,
+      padding: "8px 14px",
+      borderRadius: "6px",
+      font: "13px sans-serif",
+      color: "#fff",
+      background: warn ? "#b3412f" : "#2f6f4f",
+      opacity: "0.9",
+      transition: "opacity 0.4s",
+      pointerEvents: "none",
+    });
+    document.body.appendChild(el);
+    setTimeout(() => (el.style.opacity = "0"), warn ? 5000 : 2000);
+    setTimeout(() => el.remove(), warn ? 5500 : 2500);
   }
 
   // Notice the result screen the moment it is mounted, however briefly it

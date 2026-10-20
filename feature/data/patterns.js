@@ -5,6 +5,11 @@
 
 import { median } from "/feature/util/median.js";
 
+// Which word list / mode a test used, e.g. "turkish_5k · words 10".
+// Records saved before the settings were logged have none.
+export const settingsOf = (r) =>
+    r.language ? [r.language, [r.mode, r.mode2].filter((x) => x != null).join(" ")].join(" · ") : "";
+
 // A letter's error rate is shown only once it was typed this often.
 const MIN_LETTER_SEEN = 10;
 
@@ -82,6 +87,7 @@ export function computePatterns(records, analyzeWord) {
         }
         perTest.push({
             time: record.time,
+            settings: settingsOf(record),
             wpm: record.overallWPM,
             accuracy: record.accuracy,
             pause: pauses.length ? median(pauses) : null,

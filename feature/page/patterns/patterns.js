@@ -1,6 +1,6 @@
 /* global MTLAnalyzer */
 import { getRecords } from "/feature/data/records-provider.js";
-import { computePatterns } from "/feature/data/patterns.js";
+import { computePatterns, settingsOf } from "/feature/data/patterns.js";
 import { renderBoxPracticeWords } from "/feature/page/box-practice-words.js";
 
 const TYPE_INFO = {
@@ -24,8 +24,25 @@ function fill(tableId, rows) {
         rows.join("") || `<tr><td colspan="9">No data yet.</td></tr>`;
 }
 
+// The filter keeps its choice across re-renders (a new test saved).
+let filter = "";
+
 export async function renderPatternsPage() {
-    const p = computePatterns(await getRecords(), MTLAnalyzer.analyzeWord);
+    const records = await getRecords();
+    const select = document.getElementById("patternFilter");
+    const kinds = [...new Set(records.map(settingsOf).filter(Boolean))].sort();
+    if (filter && !kinds.includes(filter)) filter = "";
+    select.innerHTML = [`<option value="">All tests</option>`]
+        .concat(kinds.map((k) => `<option value="${esc(k)}">${esc(k)}</option>`))
+        .join("");
+    select.value = filter;
+    select.onchange = () => {
+        filter = select.value;
+        renderPatternsPage().catch(console.error);
+    };
+
+    const chosen = filter ? records.filter((r) => settingsOf(r) === filter) : records;
+    const p = computePatterns(chosen, MTLAnalyzer.analyzeWord);
 
     document.getElementById("patternTests").textContent = p.tests;
     document.getElementById("patternRate").textContent =
@@ -56,6 +73,6 @@ export async function renderPatternsPage() {
         <td>${pct(x.rate)}</td></tr>`));
 
     fill("pauseTable", p.perTest.slice(-30).reverse().map((t) => `<tr>
-        <td>${esc(new Date(t.time).toLocaleString())}</td><td>${t.wpm ?? "—"}</td>
+        <td>${esc(new Date(t.time).toLocaleString())}</td><td>${esc(t.settings || "—")}</td><td>${t.wpm ?? "—"}</td>
         <td>${t.accuracy != null ? t.accuracy + "%" : "—"}</td><td>${ms(t.pause)}</td></tr>`));
 }

@@ -35,12 +35,18 @@ Backspace are kept too. Each saved test has:
   Only the first wrong key of a run counts; the keys after it are shifted
   until it is fixed.
 - `keystrokes`: every key with its word, position, expected key and timing.
+- The test's settings from Monkeytype's config: `language`, `mode`,
+  `mode2` (word count or seconds), `punctuation`, `numbers`.
+
+A short note in the corner of Monkeytype confirms each saved test (or says
+why it was not saved), and the toolbar badge shows how many tests are saved.
 
 The **Mistake Patterns** page of the analysis view sums these up: kinds of
 mistakes, wrong-key pairs (such as `ğ → p`), the letter pairs where you miss
 most, per-letter error rates, the pause before each word (it drops when you
 read the next word while typing the current one), and a practice link with
-words that contain your weakest letter pairs.
+words that contain your weakest letter pairs. It can be limited to one word
+list or mode (say, `turkish_5k`).
 
 ## Monkeytype Settings
 
