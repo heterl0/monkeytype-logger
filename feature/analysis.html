@@ -159,14 +159,51 @@
                 class="practice-box"
                 role="button"
                 tabindex="0"
-                aria-label="Practice words with your weakest letter pairs"
+                aria-label="Practice a drill for your weak spots"
                 id="practice-box-patterns"
         >
             <div class="practice-title">
-                <span class="practice-link-indicator">&nearr;</span>  Practice! Words with your weakest letter pairs
+                <span class="practice-link-indicator">&nearr;</span>  Practice! A drill for your weak spots
             </div>
             <div class="practice-content" id="practicePatterns"></div>
         </div>
+        <p class="note" id="drillSource"></p>
+
+        <h3>Progress by day</h3>
+        <div class="chart-row">
+            <figure><figcaption>Median WPM</figcaption><div id="trendWpm"></div></figure>
+            <figure><figcaption>Mistakes per 100 words</figcaption><div id="trendMistakes"></div></figure>
+            <figure><figcaption>Median pause before a word</figcaption><div id="trendPause"></div></figure>
+            <figure><figcaption>Rhythm unevenness</figcaption><div id="trendUneven"></div></figure>
+        </div>
+        <table id="trendTable">
+            <thead><tr><th>Day</th><th>Tests</th><th>Words</th><th>Median WPM</th><th>Mistakes per 100 words</th><th>Median pause</th><th>Unevenness</th></tr></thead>
+            <tbody></tbody>
+        </table>
+
+        <h3>Rhythm</h3>
+        <div class="info-box">
+            The time between keys inside words. A syllable is typed as one quick movement, with a small
+            step into the next one; in Turkish tests the two are measured apart.
+            <b>Unevenness</b> is how far a gap inside a syllable typically strays from your usual gap there,
+            as a share of it: 0 % would be a metronome. A mistake counts as <b>rushed</b> when typed in
+            under ¾ of your usual gap at that kind of spot, <b>hesitant</b> when over 1.5×.
+        </div>
+        <div class="stat-container">
+            <div class="stat-box">
+                <div class="stat-label">Unevenness</div>
+                <div class="stat-value" id="rhythmUneven">—</div>
+            </div>
+            <div class="stat-box rhythm-syllables">
+                <div class="stat-label">Gap: inside a syllable → into the next</div>
+                <div class="stat-value" id="sylGap">—</div>
+            </div>
+            <div class="stat-box rhythm-syllables">
+                <div class="stat-label">Mistakes per 100 keys: inside a syllable → its first key</div>
+                <div class="stat-value" id="sylMiss">—</div>
+            </div>
+        </div>
+        <p class="note" id="rhythmTempo"></p>
 
         <h3>Kinds of mistakes</h3>
         <table id="typeTable">
@@ -198,7 +235,7 @@
             word while you type the current one brings it down; long pauses tend to come before mistakes.
         </div>
         <table id="pauseTable">
-            <thead><tr><th>Date</th><th>Test</th><th>WPM</th><th>Accuracy</th><th>Median pause</th></tr></thead>
+            <thead><tr><th>Date</th><th>Test</th><th>WPM</th><th>Accuracy</th><th>Median pause</th><th>Unevenness</th></tr></thead>
             <tbody></tbody>
         </table>
     </div>

@@ -3,7 +3,7 @@
 // let decompressed = LZString.decompressFromEncodedURIComponent(uri)
 // use LZString.compressToEncodedURIComponent, otherwise it will not work
 
-export const getMonkeytypeLink = (words) => {
+export const getMonkeytypeLink = (words, limit = 10) => {
     const settings_plain = JSON.stringify(
 
         [
@@ -14,7 +14,7 @@ export const getMonkeytypeLink = (words) => {
                 "pipeDelimiter": false,
                 "limit": {
                     "mode": "word",
-                    "value": 10
+                    "value": limit
                 },
                 "text":
                 words

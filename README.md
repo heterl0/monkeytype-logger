@@ -44,9 +44,17 @@ why it was not saved), and the toolbar badge shows how many tests are saved.
 The **Mistake Patterns** page of the analysis view sums these up: kinds of
 mistakes, wrong-key pairs (such as `ğ → p`), the letter pairs where you miss
 most, per-letter error rates, the pause before each word (it drops when you
-read the next word while typing the current one), and a practice link with
-words that contain your weakest letter pairs. It can be limited to one word
-list or mode (say, `turkish_5k`).
+read the next word while typing the current one), your rhythm (how evenly
+you type inside syllables, the step into the next syllable and how many
+more mistakes happen there, and whether mistakes come in a rush or after a
+hesitation; syllables use Turkish rules, other languages are measured per
+word), progress by day (WPM, mistakes per 100 words, pause, rhythm),
+and a **drill**: a Monkeytype test made of
+words from your word list (say, `turkish_5k`) that contain the letter pairs
+and letters you miss most. The word list is saved the first time you type a
+test in that language; the **Weak-spot Drill** button in the popup opens
+it in one click (it stays disabled until there are mistakes to work on).
+The page can be limited to one word list or mode.
 
 ## Monkeytype Settings
 

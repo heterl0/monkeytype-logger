@@ -2,6 +2,12 @@
 import { getRecords } from "/feature/data/records-provider.js";
 import { computePatterns, settingsOf } from "/feature/data/patterns.js";
 import { renderBoxPracticeWords } from "/feature/page/box-practice-words.js";
+import { drillFor } from "/feature/data/drill.js";
+import { dailyTrend } from "/feature/data/trend.js";
+import { lineChart } from "/feature/util/line-chart.js";
+
+const getWordLists = () =>
+    new Promise((resolve) => chrome.storage.local.get(["wordLists"], (r) => resolve(r.wordLists || {})));
 
 const TYPE_INFO = {
     substitution: "Wrong key, often a neighbouring one",
@@ -50,11 +56,53 @@ export async function renderPatternsPage() {
     document.getElementById("pauseClean").textContent = ms(p.pauseClean);
     document.getElementById("pauseMistake").textContent = ms(p.pauseMistake);
 
+    // The drill draws from the word list of the tests shown.
+    const drill = drillFor(p, chosen, await getWordLists());
     renderBoxPracticeWords(
-        p.practice.map((word) => ({ word })),
+        drill.words.map((word) => ({ word })),
         "practicePatterns",
-        "practice-box-patterns"
+        "practice-box-patterns",
+        drill.limit
     );
+    document.getElementById("drillSource").textContent = drill.fromList
+        ? `${drill.words.length} words from ${drill.language} with your weakest letter pairs and letters; each test uses ${drill.limit} of them, shuffled.`
+        : "Words you have typed that contain your weakest letter pairs. Type a test on Monkeytype with the extension active so it can save the word list, and the drill will draw from the whole list instead.";
+
+    const days = dailyTrend(p.perTest);
+    const short = (d) => d.slice(5).replace("-", ".");
+    document.getElementById("trendWpm").innerHTML = lineChart(days.map((d) => ({ x: short(d.day), y: d.wpm })));
+    document.getElementById("trendMistakes").innerHTML = lineChart(
+        days.map((d) => ({ x: short(d.day), y: d.mistakesPer100 })),
+        (v) => v.toFixed(1)
+    );
+    document.getElementById("trendPause").innerHTML = lineChart(
+        days.map((d) => ({ x: short(d.day), y: d.pause })),
+        (v) => Math.round(v) + " ms"
+    );
+    document.getElementById("trendUneven").innerHTML = lineChart(
+        days.map((d) => ({ x: short(d.day), y: d.uneven == null ? null : d.uneven * 100 })),
+        (v) => Math.round(v) + " %"
+    );
+
+    const r = p.rhythm;
+    const n = r.tempo.rushed + r.tempo.steady + r.tempo.hesitant;
+    document.getElementById("rhythmUneven").textContent = r.uneven == null ? "—" : Math.round(r.uneven * 100) + " %";
+    const s = r.syllables;
+    document.querySelectorAll(".rhythm-syllables").forEach((el) => (el.hidden = !s));
+    if (s) {
+        document.getElementById("sylGap").textContent = `${Math.round(s.gapIn)} → ${Math.round(s.gapStart)} ms`;
+        document.getElementById("sylMiss").textContent = `${s.missIn.toFixed(1)} → ${s.missStart.toFixed(1)}`;
+    }
+    document.getElementById("rhythmTempo").textContent = n
+        ? `${Math.round((r.tempo.rushed / n) * 100)} % rushed · ${Math.round((r.tempo.hesitant / n) * 100)} % hesitant · ${Math.round((r.tempo.steady / n) * 100)} % at your usual pace`
+        : "Not enough data yet.";
+
+    fill("trendTable", days.slice(-30).reverse().map((d) => `<tr>
+        <td>${esc(d.day)}</td><td>${d.tests}</td><td>${d.words}</td>
+        <td>${d.wpm != null ? Math.round(d.wpm) : "—"}</td>
+        <td>${d.mistakesPer100 != null ? d.mistakesPer100.toFixed(1) : "—"}</td>
+        <td>${ms(d.pause)}</td>
+        <td>${d.uneven != null ? Math.round(d.uneven * 100) + " %" : "—"}</td></tr>`));
 
     fill("typeTable", p.types.map((t) => `<tr>
         <td>${esc(t.type)}</td><td>${t.count}</td><td>${pct(t.count / p.mistakes)}</td>
@@ -74,5 +122,6 @@ export async function renderPatternsPage() {
 
     fill("pauseTable", p.perTest.slice(-30).reverse().map((t) => `<tr>
         <td>${esc(new Date(t.time).toLocaleString())}</td><td>${esc(t.settings || "—")}</td><td>${t.wpm ?? "—"}</td>
-        <td>${t.accuracy != null ? t.accuracy + "%" : "—"}</td><td>${ms(t.pause)}</td></tr>`));
+        <td>${t.accuracy != null ? t.accuracy + "%" : "—"}</td><td>${ms(t.pause)}</td>
+        <td>${t.uneven != null ? Math.round(t.uneven * 100) + " %" : "—"}</td></tr>`));
 }

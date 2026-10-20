@@ -326,6 +326,7 @@
           toast("Monkeytype Logger: test not saved", true);
         } else if (res.success) {
           toast(`Monkeytype Logger: test saved (${res.recordCount})`);
+          saveWordList(rec.language);
         } else if (res.reason !== "deactivated") {
           toast(`Monkeytype Logger: test not saved (${res.reason})`, true);
         }
@@ -390,6 +391,34 @@
       sendResponse({ success: true });
     }
   });
+
+  // Keep a copy of each word list you type in (Monkeytype serves them at
+  // /languages/<name>.json), so the analysis page can build drills from the
+  // whole list. Fetched once per language; the newest few are kept.
+  const MAX_WORD_LISTS = 5;
+  function saveWordList(language) {
+    if (!language || !/^[\w-]+$/.test(language)) return;
+    try {
+      chrome.storage.local.get(["wordLists"], async (res) => {
+        const lists = res.wordLists || {};
+        if (lists[language]) return;
+        try {
+          const r = await fetch(`/languages/${language}.json`);
+          const words = r.ok ? (await r.json()).words : null;
+          if (!Array.isArray(words) || words.length === 0) return;
+          lists[language] = words;
+          const names = Object.keys(lists);
+          while (names.length > MAX_WORD_LISTS) delete lists[names.shift()];
+          chrome.storage.local.set({ wordLists: lists });
+          LOG(`saved the ${language} word list (${words.length} words) for drills`);
+        } catch (e) {
+          LOG("could not load the word list", language, e);
+        }
+      });
+    } catch {
+      // extension reloaded; save() already told the user
+    }
+  }
 
   LOG("live keystroke logging active");
 })();

@@ -4,6 +4,7 @@
 // logging) have no positions and are skipped here.
 
 import { median } from "/feature/util/median.js";
+import { syllableStarts, usesTurkishSyllables } from "/feature/util/syllables.js";
 
 // Which word list / mode a test used, e.g. "turkish_5k · words 10".
 // Records saved before the settings were logged have none.
@@ -12,6 +13,11 @@ export const settingsOf = (r) =>
 
 // A letter's error rate is shown only once it was typed this often.
 const MIN_LETTER_SEEN = 10;
+
+// A mistake typed faster than this share of the test's usual gap between
+// keys counts as rushed; slower than HESITANT times it, as hesitant.
+const RUSHED = 0.75;
+const HESITANT = 1.5;
 
 const BACK = "⌫";
 const BACK_WORD = "⌫w";
@@ -53,6 +59,12 @@ export function computePatterns(records, analyzeWord) {
     const missed = new Map(); // letter -> mistakes on it
     const pauseClean = [];
     const pauseMistake = [];
+    // Rhythm inside words: the time between keys, the first letter of a
+    // word left out (that is the pause, measured above).
+    const unevenAll = [];
+    const tempo = { rushed: 0, steady: 0, hesitant: 0 };
+    // Turkish tests: keys inside a syllable vs. the first key of a new one.
+    const syl = { gapIn: [], gapStart: [], keysIn: 0, keysStart: 0, missIn: 0, missStart: 0 };
     const perTest = [];
     const allWords = new Set();
     let tests = 0;
@@ -63,12 +75,26 @@ export function computePatterns(records, analyzeWord) {
         if (!Array.isArray(record.keystrokes) || record.keystrokes.length === 0) continue;
         tests++;
         const pauses = [];
+        let testWords = 0;
+        let testMistakes = 0;
+        const bySyllables = usesTurkishSyllables(record);
+        const gaps = { in: [], start: [] }; // correct keys inside words
+        const mistakeGaps = { in: [], start: [] }; // mistakes inside words
         for (const { word, idx, keys } of wordsWithKeys(record)) {
             const target = word.wordCorrected;
             if (!target || keys.length === 0) continue;
             wordCount++;
+            testWords++;
             allWords.add(target);
             const mistakes = analyzeWord(target, keys);
+            testMistakes += mistakes.length;
+            // Without syllables every key counts as "in".
+            const starts = bySyllables ? syllableStarts(target) : new Set();
+            const kind = (i) => (starts.has(i) ? "start" : "in");
+            for (const ks of keys) {
+                if (!isBack(ks.k) && ks.i > 0 && ks.k === ks.e && ks.t > 0) gaps[kind(ks.i)].push(ks.t);
+            }
+            for (const m of mistakes) if (m.i > 0 && m.t > 0) mistakeGaps[kind(m.i)].push(m.t);
             for (const ch of target) seen.set(ch, (seen.get(ch) || 0) + 1);
             for (const m of mistakes) {
                 mistakeCount++;
@@ -85,12 +111,44 @@ export function computePatterns(records, analyzeWord) {
                 (mistakes.length ? pauseMistake : pauseClean).push(first.t);
             }
         }
+        // Unevenness: the median distance of a gap from the median gap, as a
+        // share of it (robust to the odd long pause). 0 % is a metronome.
+        // Measured inside syllables, so the natural step into the next
+        // syllable does not count against you.
+        let uneven = null;
+        if (gaps.in.length >= 10) {
+            const med = median(gaps.in);
+            uneven = median(gaps.in.map((g) => Math.abs(g - med))) / med;
+            unevenAll.push(uneven);
+            // Was each mistake typed in a rush (much faster than your usual
+            // gap at that kind of spot) or after a hesitation (much slower)?
+            for (const k of ["in", "start"]) {
+                if (gaps[k].length === 0) continue;
+                const usual = median(gaps[k]);
+                for (const g of mistakeGaps[k]) {
+                    if (g < RUSHED * usual) tempo.rushed++;
+                    else if (g > HESITANT * usual) tempo.hesitant++;
+                    else tempo.steady++;
+                }
+            }
+        }
+        if (bySyllables) {
+            syl.gapIn.push(...gaps.in);
+            syl.gapStart.push(...gaps.start);
+            syl.keysIn += gaps.in.length + mistakeGaps.in.length;
+            syl.keysStart += gaps.start.length + mistakeGaps.start.length;
+            syl.missIn += mistakeGaps.in.length;
+            syl.missStart += mistakeGaps.start.length;
+        }
         perTest.push({
+            uneven,
             time: record.time,
             settings: settingsOf(record),
             wpm: record.overallWPM,
             accuracy: record.accuracy,
             pause: pauses.length ? median(pauses) : null,
+            words: testWords,
+            mistakes: testMistakes,
         });
     }
 
@@ -117,6 +175,20 @@ export function computePatterns(records, analyzeWord) {
         }),
         contexts: contextList,
         letters,
+        missedByLetter: Object.fromEntries(missed),
+        rhythm: {
+            uneven: unevenAll.length ? median(unevenAll) : null,
+            tempo,
+            // per 100 keys; null without Turkish tests
+            syllables: syl.keysIn && syl.keysStart
+                ? {
+                      gapIn: median(syl.gapIn),
+                      gapStart: median(syl.gapStart),
+                      missIn: (syl.missIn / syl.keysIn) * 100,
+                      missStart: (syl.missStart / syl.keysStart) * 100,
+                  }
+                : null,
+        },
         pauseClean: pauseClean.length ? median(pauseClean) : null,
         pauseMistake: pauseMistake.length ? median(pauseMistake) : null,
         perTest,
