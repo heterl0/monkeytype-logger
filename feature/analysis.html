@@ -2,6 +2,7 @@
 <html lang="en-US">
 <head>
     <script src="lib/lz-string.min.js"></script>
+    <script src="/analyzer.js"></script>
     <script src="util/median.js" type="module"></script>
     <script src="analysis.js" type="module"></script>
 
@@ -23,6 +24,8 @@
     <button class="menu-item" data-page="errors">Mistyped Words</button>
 
     <button class="menu-item" data-page="slow">Slow Words</button>
+
+    <button class="menu-item" data-page="patterns">Mistake Patterns</button>
 
     <button class="menu-item" data-page="raw_data_overview">Raw Data Overview</button>
 
@@ -118,6 +121,124 @@
         </table>
     </div>
 
+
+    <div id="patterns" class="page">
+        <h1>Mistake Patterns</h1>
+        <div class="info-box">
+            <ul>
+                <li>Worked out from every keystroke, including the mistakes you fixed with Backspace</li>
+                <li>Only the first wrong key of a run counts: the keys typed after it, until it is fixed, are shifted and not counted again</li>
+                <li>Before a key: the letter typed before the missed one (␣ = start of the word)</li>
+            </ul>
+        </div>
+
+        <label class="filter">Tests:
+            <select id="patternFilter"></select>
+        </label>
+
+        <div class="stat-container">
+            <div class="stat-box">
+                <div class="stat-label">Tests</div>
+                <div class="stat-value" id="patternTests">—</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Mistakes per 100 words</div>
+                <div class="stat-value" id="patternRate">—</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Pause before a clean word</div>
+                <div class="stat-value" id="pauseClean">—</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Pause before a word with a mistake</div>
+                <div class="stat-value" id="pauseMistake">—</div>
+            </div>
+        </div>
+
+        <div
+                class="practice-box"
+                role="button"
+                tabindex="0"
+                aria-label="Practice a drill for your weak spots"
+                id="practice-box-patterns"
+        >
+            <div class="practice-title">
+                <span class="practice-link-indicator">&nearr;</span>  Practice! A drill for your weak spots
+            </div>
+            <div class="practice-content" id="practicePatterns"></div>
+        </div>
+        <p class="note" id="drillSource"></p>
+
+        <h3>Progress by day</h3>
+        <div class="chart-row">
+            <figure><figcaption>Median WPM</figcaption><div id="trendWpm"></div></figure>
+            <figure><figcaption>Mistakes per 100 words</figcaption><div id="trendMistakes"></div></figure>
+            <figure><figcaption>Median pause before a word</figcaption><div id="trendPause"></div></figure>
+            <figure><figcaption>Rhythm unevenness</figcaption><div id="trendUneven"></div></figure>
+        </div>
+        <table id="trendTable">
+            <thead><tr><th>Day</th><th>Tests</th><th>Words</th><th>Median WPM</th><th>Mistakes per 100 words</th><th>Median pause</th><th>Unevenness</th></tr></thead>
+            <tbody></tbody>
+        </table>
+
+        <h3>Rhythm</h3>
+        <div class="info-box">
+            The time between keys inside words. A syllable is typed as one quick movement, with a small
+            step into the next one; in Turkish tests the two are measured apart.
+            <b>Unevenness</b> is how far a gap inside a syllable typically strays from your usual gap there,
+            as a share of it: 0 % would be a metronome. A mistake counts as <b>rushed</b> when typed in
+            under ¾ of your usual gap at that kind of spot, <b>hesitant</b> when over 1.5×.
+        </div>
+        <div class="stat-container">
+            <div class="stat-box">
+                <div class="stat-label">Unevenness</div>
+                <div class="stat-value" id="rhythmUneven">—</div>
+            </div>
+            <div class="stat-box rhythm-syllables">
+                <div class="stat-label">Gap: inside a syllable → into the next</div>
+                <div class="stat-value" id="sylGap">—</div>
+            </div>
+            <div class="stat-box rhythm-syllables">
+                <div class="stat-label">Mistakes per 100 keys: inside a syllable → its first key</div>
+                <div class="stat-value" id="sylMiss">—</div>
+            </div>
+        </div>
+        <p class="note" id="rhythmTempo"></p>
+
+        <h3>Kinds of mistakes</h3>
+        <table id="typeTable">
+            <thead><tr><th>Kind</th><th>Count</th><th>Share</th><th>What it means</th></tr></thead>
+            <tbody></tbody>
+        </table>
+
+        <h3>Wrong keys (expected → typed)</h3>
+        <table id="pairTable">
+            <thead><tr><th>Keys</th><th>Count</th><th>In words</th></tr></thead>
+            <tbody></tbody>
+        </table>
+
+        <h3>Letter pairs (before → <b>missed</b>)</h3>
+        <table id="contextTable">
+            <thead><tr><th>Pair</th><th>Count</th><th>In words</th></tr></thead>
+            <tbody></tbody>
+        </table>
+
+        <h3>Letters by error rate (typed at least 10 times)</h3>
+        <table id="letterTable">
+            <thead><tr><th>Letter</th><th>Typed</th><th>Mistakes</th><th>Rate</th></tr></thead>
+            <tbody></tbody>
+        </table>
+
+        <h3>Pause before each word, per test</h3>
+        <div class="info-box">
+            The median time from the end of one word to the first letter of the next. Reading the next
+            word while you type the current one brings it down; long pauses tend to come before mistakes.
+        </div>
+        <table id="pauseTable">
+            <thead><tr><th>Date</th><th>Test</th><th>WPM</th><th>Accuracy</th><th>Median pause</th><th>Unevenness</th></tr></thead>
+            <tbody></tbody>
+        </table>
+    </div>
 
     <!-- Page - My Runs -->
 

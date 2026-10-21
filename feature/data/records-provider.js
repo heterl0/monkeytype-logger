@@ -16,7 +16,8 @@ async function getWordStatistics() {
     records.forEach(record => {
         record.words.forEach(wordInfo => {
             const word = wordInfo.wordCorrected;
-            const isMistake = wordInfo.reason === "corrected";
+            // "error": left wrong, "corrected": fixed with Backspace
+            const isMistake = wordInfo.reason === "corrected" || wordInfo.reason === "error";
             const wpm = wordInfo.wpm;
             if (!word_statistics[word]) {
                 word_statistics[word] = new WordStatistic(word);

@@ -121,6 +121,7 @@ tr:hover {
 
 .stat-container {
     display: flex;
+    flex-wrap: wrap;
     gap: 30px;
     margin: 30px 0;
 }
@@ -234,4 +235,92 @@ tr:hover {
 #test {
     white-space: pre; /* preserves spaces and line breaks */
     font-family: monospace; /* optional, for better readability */
+}
+.mono {
+    font-family: monospace;
+    font-size: 1.1rem;
+    white-space: pre;
+}
+
+.filter {
+    color: #aaa;
+}
+
+.filter select {
+    margin-left: 8px;
+    padding: 6px 10px;
+    background: #242424;
+    color: #e0e0e0;
+    border: 1px solid #404040;
+    border-radius: 6px;
+    font-size: 0.95rem;
+}
+
+.note {
+    color: #999;
+    font-size: 0.9rem;
+    margin: 0 0 24px;
+}
+
+.chart-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    gap: 20px;
+}
+
+.chart-row figure {
+    margin: 0;
+    background: #242424;
+    border-radius: 10px;
+    padding: 12px 12px 4px;
+}
+
+.chart-row figcaption {
+    color: #aaa;
+    font-size: 0.9rem;
+    margin-bottom: 4px;
+}
+
+.chart {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.chart-grid {
+    stroke: #3a3a3a;
+    stroke-width: 1;
+}
+
+.chart-axis {
+    fill: #999;
+    font-size: 11px;
+}
+
+.chart-line {
+    fill: none;
+    stroke: #7da1e8;
+    stroke-width: 2;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+}
+
+.chart-dot {
+    fill: #7da1e8;
+    stroke: #242424;
+    stroke-width: 2;
+}
+
+.chart-point:hover .chart-dot {
+    r: 6;
+}
+
+.chart-empty {
+    color: #777;
+    font-size: 0.9rem;
+}
+
+#patterns .stat-box {
+    flex: 1 1 160px;
+    min-width: 0;
 }

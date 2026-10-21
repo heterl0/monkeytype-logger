@@ -594,3 +594,23 @@ body {
     max-height: 150px;
   }
 }
+
+.drill-button {
+  width: 100%;
+}
+
+.action-button:disabled,
+.action-button:disabled:hover {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  background: linear-gradient(135deg, #7da1e8 0%, #4281ff 100%);
+}
+
+.drill-hint {
+  margin: 6px 0 12px;
+  font-size: 0.75rem;
+  color: #999;
+  text-align: center;
+}

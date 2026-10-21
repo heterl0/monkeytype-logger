@@ -38,11 +38,18 @@ function isActivated() {
   return activeSwitchState;
 }
 
+// Show the number of saved tests on the toolbar icon, so a test that was
+// not logged is noticed right away.
+function showCount(n) {
+  chrome.action.setBadgeText({ text: n > 0 ? String(n) : "" });
+}
+chrome.storage.local.get(["records"], (res) => showCount((res.records || []).length));
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   console.log("MonkeyType Logger: Received message:", message.action);
 
   chrome.storage.local.get(["records"], (result) => {
-    const records = result.records || [];
+    let records = result.records || [];
 
     if (message.action === "saveRecord" && message.record) {
       console.log(
@@ -80,6 +87,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
               "MonkeyType Logger: Successfully saved record, total records:",
               records.length
             );
+            showCount(records.length);
             sendResponse({ success: true, recordCount: records.length });
 
             // Check if the record count exceeds the limit
@@ -110,6 +118,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             "MonkeyType Logger: Last record deleted, remaining:",
             records.length
           );
+          showCount(records.length);
           sendResponse({ success: true, recordCount: records.length });
         });
       } else {
@@ -119,6 +128,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       console.log("MonkeyType Logger: Resetting all records");
       chrome.storage.local.set({ records: [] }, () => {
         console.log("MonkeyType Logger: All records reset");
+        showCount(0);
         sendResponse({ success: true });
       });
     } else {

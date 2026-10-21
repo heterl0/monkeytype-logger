@@ -21,6 +21,41 @@ The extension is published on Microsoft Edge Add-ons:
 - Logs all words typed in Monkeytype
 - Supports exporting logs as JSON-file
 
+## What is recorded
+
+Every keystroke of a test is logged live, so mistakes you fixed with
+Backspace are kept too. Each saved test has:
+
+- `words`: each typed word with `reason` (`correct`, `corrected`: fixed with
+  Backspace, `error`: left wrong), its speed (`wpm`) and its `mistakes`.
+- `mistakes`: where in the word (`i`, 0-based), the expected (`e`) and typed
+  (`k`) key, the letters before (`p`) and after (`n`) the expected one, the
+  time since the previous key (`t`, ms) and the kind of mistake (`type`:
+  substitution, transposition, omission, insertion, early-space, extra).
+  Only the first wrong key of a run counts; the keys after it are shifted
+  until it is fixed.
+- `keystrokes`: every key with its word, position, expected key and timing.
+- The test's settings from Monkeytype's config: `language`, `mode`,
+  `mode2` (word count or seconds), `punctuation`, `numbers`.
+
+A short note in the corner of Monkeytype confirms each saved test (or says
+why it was not saved), and the toolbar badge shows how many tests are saved.
+
+The **Mistake Patterns** page of the analysis view sums these up: kinds of
+mistakes, wrong-key pairs (such as `ğ → p`), the letter pairs where you miss
+most, per-letter error rates, the pause before each word (it drops when you
+read the next word while typing the current one), your rhythm (how evenly
+you type inside syllables, the step into the next syllable and how many
+more mistakes happen there, and whether mistakes come in a rush or after a
+hesitation; syllables use Turkish rules, other languages are measured per
+word), progress by day (WPM, mistakes per 100 words, pause, rhythm),
+and a **drill**: a Monkeytype test made of
+words from your word list (say, `turkish_5k`) that contain the letter pairs
+and letters you miss most. The word list is saved the first time you type a
+test in that language; the **Weak-spot Drill** button in the popup opens
+it in one click (it stays disabled until there are mistakes to work on).
+The page can be limited to one word list or mode.
+
 ## Monkeytype Settings
 
 Make sure "always show words history" is enabled in your Monkeytype account settings

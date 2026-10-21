@@ -97,6 +97,15 @@
 
         <!-- Action Panel -->
         <section class="action-panel">
+            <button id="drillButton" class="action-button primary drill-button" disabled>
+                <span class="button-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16zm0-14a6 6 0 1 0 0 12 6 6 0 0 0 0-12zm0 10a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm0-6a2 2 0 1 0 0 4 2 2 0 0 0 0-4z" />
+                    </svg>
+                </span>
+                Weak-spot Drill
+            </button>
+            <p class="drill-hint" id="drillHint"></p>
             <div class="primary-actions">
                 <a href="https://monkeytype-logger.vercel.app/" target="_blank" class="action-button primary">
                     <span class="button-icon">
@@ -203,6 +212,9 @@
     </div>
 
     <script src="popup.js"></script>
+    <script src="/feature/lib/lz-string.min.js"></script>
+    <script src="/analyzer.js"></script>
+    <script src="popup-drill.js" type="module"></script>
 </body>
 
 </html>

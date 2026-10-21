@@ -1,13 +1,23 @@
 {
   "manifest_version": 3,
   "name": "Monkeytype History Logger",
-  "version": "1.0.8",
-  "description": "Logs error and corrected words from Monkeytype tests into a JSON file.",
-  "permissions": ["storage", "downloads", "unlimitedStorage", "tabs"],
+  "version": "1.2.0",
+  "description": "Logs every keystroke of Monkeytype tests (mistakes, corrections, word speed) into a JSON file.",
+  "permissions": [
+    "storage",
+    "downloads",
+    "unlimitedStorage",
+    "tabs"
+  ],
   "content_scripts": [
     {
-      "matches": ["https://monkeytype.com/*"],
-      "js": ["content.js"]
+      "matches": [
+        "https://monkeytype.com/*"
+      ],
+      "js": [
+        "analyzer.js",
+        "content.js"
+      ]
     }
   ],
   "background": {
@@ -22,8 +32,12 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["feature/*"],
-      "matches": ["<all_urls>"]
+      "resources": [
+        "feature/*"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
     }
   ]
 }
