@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Monkeytype History Logger",
-  "version": "1.2.0",
+  "version": "1.0.8",
   "description": "Logs every keystroke of Monkeytype tests (mistakes, corrections, word speed) into a JSON file.",
   "permissions": [
     "storage",

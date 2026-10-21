@@ -1,13 +1,16 @@
 // background.js
 
 let activeSwitchState = true;
+let showNotificationsState = true;
 
 // Add debugging
 console.log("MonkeyType Logger: Background script loaded");
 
-chrome.storage.local.get(["activeSwitch"], (res) => {
+chrome.storage.local.get(["activeSwitch", "settings", "records"], (res) => {
   activeSwitchState = res.activeSwitch ?? true;
+  showNotificationsState = res.settings?.showNotifications ?? true;
   console.log("MonkeyType Logger: Active switch state:", activeSwitchState);
+  showCount((res.records || []).length);
 });
 
 chrome.storage.onChanged.addListener((changes, areaName) => {
@@ -17,6 +20,13 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
       "MonkeyType Logger: Active switch updated to:",
       activeSwitchState
     );
+  }
+  if (areaName === "local" && changes.settings) {
+    showNotificationsState = changes.settings.newValue?.showNotifications ?? true;
+    chrome.storage.local.get(["records"], (res) => showCount((res.records || []).length));
+  }
+  if (areaName === "local" && changes.records) {
+    showCount((changes.records.newValue || []).length);
   }
 });
 
@@ -41,9 +51,10 @@ function isActivated() {
 // Show the number of saved tests on the toolbar icon, so a test that was
 // not logged is noticed right away.
 function showCount(n) {
-  chrome.action.setBadgeText({ text: n > 0 ? String(n) : "" });
+  chrome.action.setBadgeText({
+    text: showNotificationsState && n > 0 ? String(n) : "",
+  });
 }
-chrome.storage.local.get(["records"], (res) => showCount((res.records || []).length));
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   console.log("MonkeyType Logger: Received message:", message.action);

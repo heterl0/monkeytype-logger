@@ -50,7 +50,6 @@ class MonkeytypeLoggerPopup {
   constructor() {
     this.isLoading = false;
     this.settings = {
-      autoSync: true,
       showNotifications: true,
     };
 
@@ -67,14 +66,19 @@ class MonkeytypeLoggerPopup {
   bindEvents() {
     // Settings panel toggle
     document.getElementById("settingsButton").addEventListener("click", () => {
-      this.toggleSettings();
+      this.openSettings();
     });
 
     document
       .getElementById("closeSettingsButton")
       .addEventListener("click", () => {
-        this.toggleSettings();
+        this.closeSettings();
       });
+
+    document.getElementById("showNotifications").addEventListener("change", (event) => {
+      this.settings.showNotifications = event.target.checked;
+      window.chrome.storage.local.set({ settings: { ...this.settings } });
+    });
 
     // View all button
     document.getElementById("viewAllButton").addEventListener("click", () => {
@@ -235,7 +239,25 @@ class MonkeytypeLoggerPopup {
 
   toggleSettings() {
     const panel = document.getElementById("settingsPanel");
-    panel.classList.toggle("active");
+    if (panel.classList.contains("active")) {
+      this.closeSettings();
+    } else {
+      this.openSettings();
+    }
+  }
+
+  openSettings() {
+    const panel = document.getElementById("settingsPanel");
+    panel.classList.add("active");
+    panel.setAttribute("aria-hidden", "false");
+    document.getElementById("settingsButton").setAttribute("aria-expanded", "true");
+  }
+
+  closeSettings() {
+    const panel = document.getElementById("settingsPanel");
+    panel.classList.remove("active");
+    panel.setAttribute("aria-hidden", "true");
+    document.getElementById("settingsButton").setAttribute("aria-expanded", "false");
   }
 
   showLoading(show = true) {
@@ -343,20 +365,19 @@ class MonkeytypeLoggerPopup {
   }
 
   viewAllRecords() {
-    // Open a new tab with detailed analysis
+    // Open the extension's local analysis page
     window.chrome.tabs.create({
-      url: "https://monkeytype-logger.vercel.app/",
+      url: chrome.runtime.getURL("feature/analysis.html"),
     });
   }
 
   loadSettings() {
     window.chrome.storage.local.get(["settings"], (result) => {
-      if (result.settings) {
-        this.settings = { ...this.settings, ...result.settings };
-      }
+      this.settings = {
+        showNotifications: result.settings?.showNotifications ?? true,
+      };
 
       // Update settings UI
-      document.getElementById("autoSync").checked = this.settings.autoSync;
       document.getElementById("showNotifications").checked =
         this.settings.showNotifications;
     });
