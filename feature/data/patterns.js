@@ -6,10 +6,19 @@
 import { median } from "/feature/util/median.js";
 import { syllableStarts, usesTurkishSyllables } from "/feature/util/syllables.js";
 
-// Which word list / mode a test used, e.g. "turkish_5k · words 10".
-// Records saved before the settings were logged have none.
+// Which word list / mode a test used, e.g. "turkish_5k · words 10 ·
+// punctuation". Records saved before the settings were logged have none.
 export const settingsOf = (r) =>
-    r.language ? [r.language, [r.mode, r.mode2].filter((x) => x != null).join(" ")].join(" · ") : "";
+    r.language
+        ? [
+              r.language,
+              [r.mode, r.mode2].filter((x) => x != null).join(" "),
+              r.punctuation ? "punctuation" : null,
+              r.numbers ? "numbers" : null,
+          ]
+              .filter(Boolean)
+              .join(" · ")
+        : "";
 
 // A letter's error rate is shown only once it was typed this often.
 const MIN_LETTER_SEEN = 10;
